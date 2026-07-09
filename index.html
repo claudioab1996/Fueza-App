@@ -173,6 +173,29 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 .filtros{display:flex;gap:.4rem;overflow-x:auto;padding:.5rem 0 .1rem;-webkit-overflow-scrolling:touch}
 .filtros .chip{flex:none}
 .filtros .chip.sel{background:var(--accent);color:#141414;border-color:var(--accent)}
+/* ---------- pictogramas / activación ---------- */
+.picto{width:38px;height:38px;flex:none;background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:3px;display:flex;align-items:center;justify-content:center}
+.picto svg{width:100%;height:100%}
+.picto-grande{width:68px;height:68px;padding:6px}
+.mapa-act{display:flex;gap:.4rem;justify-content:center;margin:.6rem 0}
+.mapa-act svg{width:40%;max-width:118px;height:auto}
+.mapa-act .musc{stroke:#0D0E11;stroke-width:1}
+.act-lista{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;margin-bottom:.2rem}
+/* ---------- calendario ---------- */
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.cal-nav b{text-transform:capitalize;font-size:.95rem}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-cab{text-align:center;font-size:.6rem;font-weight:800;color:var(--muted);letter-spacing:.08em;padding-bottom:2px}
+.cal-dia{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.cal-dia.entreno{background:var(--accent-soft);color:var(--accent);font-weight:800}
+.cal-dia.hoy{outline:1.5px solid var(--accent);outline-offset:-1.5px}
+/* ---------- planes ---------- */
+.plan-cab{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;cursor:pointer}
+.plan-cab .tit{font-weight:800;font-size:.92rem}
+.rutina-fila{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0 .5rem .6rem;border-left:2px solid var(--line);margin-left:.2rem}
+.ed-ej{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:.6rem;margin-bottom:.5rem}
+.ed-ej .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-top:.45rem}
+.ed-ej input{background:var(--surface)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -210,9 +233,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <button class="btn primario" style="margin-bottom:.6rem" onclick="empezarEntreno()">Empezar entrenamiento</button>
       <button class="btn" style="margin-bottom:.6rem" id="btn-repetir" onclick="repetirUltimo()">Repetir último entrenamiento</button>
 
-      <div class="card" id="card-rutinas" style="display:none">
-        <p class="eyebrow">Mis rutinas</p>
-        <div id="lista-rutinas"></div>
+      <div class="card">
+        <p class="eyebrow">Planes y rutinas</p>
+        <div id="lista-planes" style="margin-top:.2rem"></div>
+        <div class="grid2" style="margin-top:.8rem">
+          <button class="btn mini" style="width:100%" onclick="abrirEditorRutina()">＋ Nueva rutina</button>
+          <button class="btn mini" style="width:100%" onclick="abrirProgramas()">Explorar programas</button>
+        </div>
       </div>
 
       <div class="card">
@@ -241,6 +268,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 
   <!-- ============ PROGRESO ============ -->
   <section class="vista" id="vista-progreso">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="btn mini" onclick="moverCal(-1)">‹</button>
+        <b id="cal-titulo"></b>
+        <button class="btn mini" onclick="moverCal(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <p class="peq muted" id="cal-resumen" style="margin-top:.6rem;text-align:center"></p>
+    </div>
     <div class="card">
       <p class="eyebrow">Fuerza estimada (1RM)</p>
       <select id="sel-ej-progreso" onchange="pintarProgresoEjercicio()"></select>
@@ -297,7 +333,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <input type="file" id="importar-json" accept=".json" style="display:none" onchange="importarJSON(event)">
       <button class="btn peligro" onclick="borrarTodo()">Borrar todos los datos</button>
     </div>
-    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza V1 · local y privado · sin cuentas ni servidores</p>
+    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza V2 · local y privado · sin cuentas ni servidores</p>
   </section>
 </main>
 
@@ -394,10 +430,44 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <div class="modal-fondo" id="m-ej-detalle"><div class="modal">
   <div class="asa"></div><h2 id="ejd-titulo"></h2>
   <p class="peq muted" id="ejd-sub" style="margin-bottom:.8rem"></p>
+  <div id="ejd-visual"></div>
   <div id="ejd-historial"></div>
   <div class="grid2" style="margin-top:1rem">
     <button class="btn" id="ejd-editar" onclick="editarEjercicioActual()">Editar</button>
     <button class="btn" onclick="cerrarModal('m-ej-detalle')">Cerrar</button>
+  </div>
+</div></div>
+
+<!-- modal editor de rutina -->
+<div class="modal-fondo" id="m-editor"><div class="modal">
+  <div class="asa"></div><h2 id="editor-titulo">Nueva rutina</h2>
+  <div class="campo"><label>Nombre de la rutina</label><input id="ed-nombre" placeholder="Ej.: Día de empuje"></div>
+  <div class="campo"><label>Plan</label><select id="ed-plan" onchange="edPlanCambio()"></select></div>
+  <div class="campo" id="ed-plan-nuevo-campo" style="display:none"><label>Nombre del plan nuevo</label><input id="ed-plan-nuevo" placeholder="Ej.: Rutina 2026"></div>
+  <p class="eyebrow" style="margin-top:.4rem">Ejercicios</p>
+  <div id="ed-ejercicios"></div>
+  <button class="btn" style="margin:.2rem 0 .9rem" onclick="abrirSelectorEjercicio('editor')">＋ Añadir ejercicio</button>
+  <div class="grid2">
+    <button class="btn" onclick="cerrarModal('m-editor')">Cancelar</button>
+    <button class="btn primario" onclick="guardarRutinaEditor()">Guardar rutina</button>
+  </div>
+</div></div>
+
+<!-- modal programas -->
+<div class="modal-fondo" id="m-programas"><div class="modal">
+  <div class="asa"></div><h2>Programas preestablecidos</h2>
+  <p class="peq muted" style="margin-bottom:.8rem">Plantillas basadas en principios con amplio respaldo: frecuencia 2x por músculo, 10–20 series semanales y sobrecarga progresiva. Al adoptar uno, se copia como plan tuyo y es totalmente editable.</p>
+  <div id="lista-programas"></div>
+  <button class="btn" style="margin-top:.6rem" onclick="cerrarModal('m-programas')">Cerrar</button>
+</div></div>
+
+<!-- modal detalle programa -->
+<div class="modal-fondo" id="m-programa-det"><div class="modal">
+  <div class="asa"></div><h2 id="prog-titulo"></h2>
+  <div id="prog-contenido"></div>
+  <div class="grid2" style="margin-top:1rem">
+    <button class="btn" onclick="cerrarModal('m-programa-det');abrirProgramas()">Volver</button>
+    <button class="btn primario" id="prog-adoptar">Adoptar como plan</button>
   </div>
 </div></div>
 
@@ -406,177 +476,261 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
    FUERZA V1 — datos base
 ===================================================== */
 const MUSCULOS = {
-  pecho:"Pecho", espalda:"Espalda", hombros:"Hombros", biceps:"Bíceps", triceps:"Tríceps",
-  antebrazos:"Antebrazos", abdomen:"Abdomen", cuadriceps:"Cuádriceps", isquios:"Isquios",
-  gluteos:"Glúteos", gemelos:"Gemelos", trapecio:"Trapecio", lumbares:"Lumbares"
+  pecho:"Pecho", dorsales:"Dorsales", espalda_alta:"Espalda alta", hombros:"Hombros",
+  biceps:"Bíceps", triceps:"Tríceps", antebrazos:"Antebrazos", abdomen:"Abdomen",
+  cuadriceps:"Cuádriceps", isquios:"Isquios", gluteos:"Glúteos", gemelos:"Gemelos",
+  trapecio:"Trapecio", lumbares:"Lumbares"
 };
 const EQUIPOS = { barra:"Barra", mancuernas:"Mancuernas", cable:"Polea", maquina:"Máquina", corporal:"Peso corporal", kettlebell:"Kettlebell", banda:"Banda" };
 
-/* Biblioteca curada (id estable, nombre, músculo, secundarios, equipo, descanso sugerido) */
+/* [id, nombre, equipo, descanso, patrón, activación ponderada] */
 const BIBLIOTECA = [
-// PECHO
-["press-banca","Press de banca","pecho",["triceps","hombros"],"barra",150],
-["press-inclinado-barra","Press inclinado con barra","pecho",["hombros","triceps"],"barra",150],
-["press-declinado-barra","Press declinado con barra","pecho",["triceps"],"barra",120],
-["press-plano-manc","Press plano con mancuernas","pecho",["triceps","hombros"],"mancuernas",120],
-["press-inclinado-manc","Press inclinado con mancuernas","pecho",["hombros","triceps"],"mancuernas",120],
-["aperturas-manc","Aperturas con mancuernas","pecho",[],"mancuernas",90],
-["aperturas-inclinadas","Aperturas inclinadas","pecho",["hombros"],"mancuernas",90],
-["cruces-polea-alta","Cruces en polea alta","pecho",[],"cable",75],
-["cruces-polea-media","Cruces en polea media","pecho",[],"cable",75],
-["cruces-polea-baja","Cruces en polea baja","pecho",["hombros"],"cable",75],
-["press-maquina","Press de pecho en máquina","pecho",["triceps"],"maquina",105],
-["pec-deck","Pec deck (contractora)","pecho",[],"maquina",75],
-["flexiones","Flexiones de brazos","pecho",["triceps","hombros","abdomen"],"corporal",90],
-["flexiones-lastradas","Flexiones lastradas","pecho",["triceps","hombros"],"corporal",120],
-["fondos-pecho","Fondos en paralelas (pecho)","pecho",["triceps","hombros"],"corporal",120],
-// ESPALDA
-["dominadas","Dominadas pronas","espalda",["biceps","antebrazos"],"corporal",150],
-["dominadas-supinas","Dominadas supinas (chin-up)","espalda",["biceps"],"corporal",150],
-["dominadas-neutras","Dominadas agarre neutro","espalda",["biceps"],"corporal",150],
-["jalon-pecho","Jalón al pecho","espalda",["biceps"],"cable",105],
-["jalon-cerrado","Jalón agarre cerrado","espalda",["biceps"],"cable",105],
-["remo-barra","Remo con barra","espalda",["biceps","lumbares"],"barra",150],
-["remo-pendlay","Remo Pendlay","espalda",["lumbares","biceps"],"barra",150],
-["remo-manc","Remo con mancuerna a una mano","espalda",["biceps"],"mancuernas",105],
-["remo-cable","Remo sentado en polea","espalda",["biceps"],"cable",105],
-["remo-t","Remo en T","espalda",["biceps","lumbares"],"maquina",120],
-["remo-maquina","Remo en máquina (chest supported)","espalda",["biceps"],"maquina",105],
-["pullover-cable","Pullover en polea alta","espalda",["triceps","pecho"],"cable",90],
-["peso-muerto","Peso muerto convencional","espalda",["isquios","gluteos","lumbares","trapecio","antebrazos"],"barra",210],
-["rack-pull","Rack pull","espalda",["trapecio","lumbares","antebrazos"],"barra",180],
-// HOMBROS
-["press-militar","Press militar con barra","hombros",["triceps","abdomen"],"barra",150],
-["press-militar-sentado","Press militar sentado","hombros",["triceps"],"barra",150],
-["press-manc-sentado","Press de hombros con mancuernas","hombros",["triceps"],"mancuernas",120],
-["press-arnold","Press Arnold","hombros",["triceps"],"mancuernas",120],
-["elev-laterales","Elevaciones laterales","hombros",[],"mancuernas",60],
-["elev-laterales-cable","Elevaciones laterales en polea","hombros",[],"cable",60],
-["elev-frontales","Elevaciones frontales","hombros",[],"mancuernas",60],
-["pajaros","Pájaros (deltoide posterior)","hombros",["trapecio"],"mancuernas",60],
-["reverse-pec-deck","Pec deck invertido","hombros",["trapecio"],"maquina",75],
-["face-pull","Face pull","hombros",["trapecio"],"cable",75],
-["press-maquina-hombro","Press de hombros en máquina","hombros",["triceps"],"maquina",105],
-// BÍCEPS
-["curl-barra","Curl con barra","biceps",["antebrazos"],"barra",90],
-["curl-barra-z","Curl con barra Z","biceps",["antebrazos"],"barra",90],
-["curl-alterno","Curl alterno con mancuernas","biceps",[],"mancuernas",75],
-["curl-martillo","Curl martillo","biceps",["antebrazos"],"mancuernas",75],
-["curl-inclinado","Curl inclinado en banco","biceps",[],"mancuernas",90],
-["curl-predicador","Curl predicador (Scott)","biceps",[],"maquina",90],
-["curl-cable","Curl en polea baja","biceps",[],"cable",75],
-["curl-concentrado","Curl concentrado","biceps",[],"mancuernas",60],
-["curl-arana","Curl araña","biceps",[],"mancuernas",75],
-// TRÍCEPS
-["press-frances","Press francés","triceps",[],"barra",90],
-["ext-cable-barra","Extensión en polea con barra","triceps",[],"cable",75],
-["ext-cable-cuerda","Extensión en polea con cuerda","triceps",[],"cable",75],
-["ext-sobre-cabeza","Extensión sobre cabeza (mancuerna)","triceps",[],"mancuernas",90],
-["ext-sobre-cabeza-cable","Extensión sobre cabeza en polea","triceps",[],"cable",75],
-["fondos-triceps","Fondos en paralelas (tríceps)","triceps",["pecho","hombros"],"corporal",120],
-["fondos-banco","Fondos entre bancos","triceps",["hombros"],"corporal",90],
-["press-cerrado","Press banca agarre cerrado","triceps",["pecho","hombros"],"barra",120],
-["patada-triceps","Patada trasera de tríceps","triceps",[],"mancuernas",60],
-// ANTEBRAZOS
-["curl-muneca","Curl de muñeca","antebrazos",[],"barra",60],
-["curl-invertido","Curl invertido","antebrazos",["biceps"],"barra",75],
-["paseo-granjero","Paseo del granjero","antebrazos",["trapecio","abdomen"],"mancuernas",120],
-// ABDOMEN
-["crunch","Crunch abdominal","abdomen",[],"corporal",60],
-["crunch-cable","Crunch en polea alta","abdomen",[],"cable",60],
-["elev-piernas","Elevaciones de piernas colgado","abdomen",["antebrazos"],"corporal",75],
-["plancha","Plancha","abdomen",["lumbares"],"corporal",60],
-["plancha-lateral","Plancha lateral","abdomen",[],"corporal",60],
-["rueda-abdominal","Rueda abdominal","abdomen",["lumbares"],"corporal",90],
-["russian-twist","Giro ruso","abdomen",[],"corporal",60],
-// CUÁDRICEPS
-["sentadilla","Sentadilla trasera","cuadriceps",["gluteos","isquios","lumbares","abdomen"],"barra",210],
-["sentadilla-frontal","Sentadilla frontal","cuadriceps",["gluteos","abdomen"],"barra",180],
-["sentadilla-goblet","Sentadilla goblet","cuadriceps",["gluteos"],"mancuernas",120],
-["prensa","Prensa de piernas","cuadriceps",["gluteos"],"maquina",150],
-["hack-squat","Hack squat","cuadriceps",["gluteos"],"maquina",150],
-["extensiones-cuad","Extensiones de cuádriceps","cuadriceps",[],"maquina",75],
-["zancadas","Zancadas con mancuernas","cuadriceps",["gluteos","isquios"],"mancuernas",105],
-["zancadas-barra","Zancadas con barra","cuadriceps",["gluteos","isquios"],"barra",120],
-["bulgara","Sentadilla búlgara","cuadriceps",["gluteos","isquios"],"mancuernas",120],
-["step-up","Subida al cajón (step up)","cuadriceps",["gluteos"],"mancuernas",90],
-["sissy-squat","Sentadilla sissy","cuadriceps",[],"corporal",90],
-// ISQUIOS
-["peso-muerto-rumano","Peso muerto rumano","isquios",["gluteos","lumbares","espalda"],"barra",150],
-["rumano-manc","Peso muerto rumano con mancuernas","isquios",["gluteos","lumbares"],"mancuernas",120],
-["piernas-rigidas","Peso muerto piernas rígidas","isquios",["gluteos","lumbares"],"barra",150],
-["curl-femoral-tumbado","Curl femoral tumbado","isquios",[],"maquina",75],
-["curl-femoral-sentado","Curl femoral sentado","isquios",[],"maquina",75],
-["buenos-dias","Buenos días","isquios",["lumbares","gluteos"],"barra",120],
-["nordic-curl","Curl nórdico","isquios",[],"corporal",120],
-// GLÚTEOS
-["hip-thrust","Hip thrust con barra","gluteos",["isquios"],"barra",120],
-["puente-gluteo","Puente de glúteo","gluteos",["isquios"],"corporal",75],
-["patada-gluteo-cable","Patada de glúteo en polea","gluteos",[],"cable",60],
-["abduccion-maquina","Abducción de cadera en máquina","gluteos",[],"maquina",60],
-// GEMELOS
-["gemelos-pie","Elevación de talones de pie","gemelos",[],"maquina",60],
-["gemelos-sentado","Elevación de talones sentado","gemelos",[],"maquina",60],
-["gemelos-prensa","Gemelos en prensa","gemelos",[],"maquina",60],
-// TRAPECIO
-["encogimientos-barra","Encogimientos con barra","trapecio",["antebrazos"],"barra",90],
-["encogimientos-manc","Encogimientos con mancuernas","trapecio",["antebrazos"],"mancuernas",75],
-// LUMBARES
-["hiperextensiones","Hiperextensiones","lumbares",["gluteos","isquios"],"corporal",75],
-["superman","Superman","lumbares",["gluteos"],"corporal",45],
-// KETTLEBELL / OTROS
-["kb-swing","Kettlebell swing","gluteos",["isquios","lumbares","hombros"],"kettlebell",90],
-["kb-goblet","Sentadilla goblet con kettlebell","cuadriceps",["gluteos"],"kettlebell",105],
-["banda-remo","Remo con banda","espalda",["biceps"],"banda",60],
-["banda-jalon","Jalón con banda","espalda",["biceps"],"banda",60],
-["banda-press","Press con banda","pecho",["triceps"],"banda",60],
+// ---- PECHO ----
+["press-banca","Press de banca","barra",150,"empuje_h",{pecho:.5,triceps:.28,hombros:.22}],
+["press-inclinado-barra","Press inclinado con barra","barra",150,"empuje_incl",{pecho:.42,hombros:.33,triceps:.25}],
+["press-declinado-barra","Press declinado con barra","barra",120,"empuje_h",{pecho:.58,triceps:.27,hombros:.15}],
+["press-plano-manc","Press plano con mancuernas","mancuernas",120,"empuje_h",{pecho:.52,triceps:.24,hombros:.24}],
+["press-inclinado-manc","Press inclinado con mancuernas","mancuernas",120,"empuje_incl",{pecho:.44,hombros:.32,triceps:.24}],
+["press-smith-plano","Press plano en Smith","maquina",135,"empuje_h",{pecho:.52,triceps:.27,hombros:.21}],
+["press-smith-inclinado","Press inclinado en Smith","maquina",135,"empuje_incl",{pecho:.44,hombros:.32,triceps:.24}],
+["press-convergente-plano","Press convergente plano (Hammer)","maquina",120,"empuje_h",{pecho:.55,triceps:.25,hombros:.2}],
+["press-convergente-inclinado","Press convergente inclinado (Hammer)","maquina",120,"empuje_incl",{pecho:.46,hombros:.3,triceps:.24}],
+["press-convergente-declinado","Press convergente declinado (Hammer)","maquina",120,"empuje_h",{pecho:.6,triceps:.25,hombros:.15}],
+["press-maquina","Press de pecho en máquina","maquina",105,"empuje_h",{pecho:.55,triceps:.25,hombros:.2}],
+["aperturas-manc","Aperturas con mancuernas","mancuernas",90,"apertura",{pecho:.8,hombros:.2}],
+["aperturas-inclinadas","Aperturas inclinadas","mancuernas",90,"apertura",{pecho:.72,hombros:.28}],
+["pec-deck","Pec deck (contractora)","maquina",75,"apertura",{pecho:.85,hombros:.15}],
+["cruces-polea-alta","Cruces en polea alta","cable",75,"apertura",{pecho:.8,hombros:.2}],
+["cruces-polea-media","Cruces en polea media","cable",75,"apertura",{pecho:.82,hombros:.18}],
+["cruces-polea-baja","Cruces en polea baja","cable",75,"apertura",{pecho:.68,hombros:.32}],
+["flexiones","Flexiones de brazos","corporal",90,"empuje_h",{pecho:.45,triceps:.25,hombros:.2,abdomen:.1}],
+["flexiones-lastradas","Flexiones lastradas","corporal",120,"empuje_h",{pecho:.45,triceps:.25,hombros:.2,abdomen:.1}],
+["fondos-pecho","Fondos en paralelas (pecho)","corporal",120,"fondo",{pecho:.45,triceps:.35,hombros:.2}],
+["banda-press","Press con banda","banda",60,"empuje_h",{pecho:.5,triceps:.28,hombros:.22}],
+// ---- DORSALES / ESPALDA ALTA ----
+["dominadas","Dominadas pronas","corporal",150,"traccion_v",{dorsales:.5,espalda_alta:.15,biceps:.22,antebrazos:.08,abdomen:.05}],
+["dominadas-supinas","Dominadas supinas (chin-up)","corporal",150,"traccion_v",{dorsales:.45,biceps:.32,espalda_alta:.12,antebrazos:.06,abdomen:.05}],
+["dominadas-neutras","Dominadas agarre neutro","corporal",150,"traccion_v",{dorsales:.48,biceps:.27,espalda_alta:.14,antebrazos:.06,abdomen:.05}],
+["dominadas-asistidas","Dominadas asistidas en máquina","maquina",120,"traccion_v",{dorsales:.5,espalda_alta:.15,biceps:.25,antebrazos:.1}],
+["jalon-pecho","Jalón al pecho","cable",105,"traccion_v",{dorsales:.52,espalda_alta:.18,biceps:.22,antebrazos:.08}],
+["jalon-ancho","Jalón agarre ancho","cable",105,"traccion_v",{dorsales:.55,espalda_alta:.2,biceps:.17,antebrazos:.08}],
+["jalon-cerrado","Jalón agarre cerrado","cable",105,"traccion_v",{dorsales:.5,biceps:.27,espalda_alta:.15,antebrazos:.08}],
+["jalon-supino","Jalón agarre supino","cable",105,"traccion_v",{dorsales:.48,biceps:.32,espalda_alta:.12,antebrazos:.08}],
+["jalon-unilateral","Jalón unilateral en polea","cable",90,"traccion_v",{dorsales:.55,biceps:.22,espalda_alta:.15,abdomen:.08}],
+["remo-barra","Remo con barra","barra",150,"traccion_h",{dorsales:.35,espalda_alta:.28,biceps:.15,lumbares:.12,trapecio:.05,antebrazos:.05}],
+["remo-pendlay","Remo Pendlay","barra",150,"traccion_h",{espalda_alta:.32,dorsales:.32,lumbares:.15,biceps:.12,trapecio:.05,antebrazos:.04}],
+["remo-manc","Remo con mancuerna a una mano","mancuernas",105,"traccion_h",{dorsales:.42,espalda_alta:.25,biceps:.18,antebrazos:.08,abdomen:.07}],
+["remo-cable","Remo sentado en polea","cable",105,"traccion_h",{dorsales:.38,espalda_alta:.3,biceps:.18,lumbares:.08,antebrazos:.06}],
+["remo-cable-ancho","Remo en polea agarre ancho","cable",105,"traccion_h",{espalda_alta:.42,dorsales:.25,biceps:.14,hombros:.13,antebrazos:.06}],
+["remo-alto-polea","Remo alto en polea (a la cara)","cable",90,"traccion_h",{espalda_alta:.45,hombros:.25,biceps:.18,dorsales:.12}],
+["remo-t","Remo en T","maquina",120,"traccion_h",{espalda_alta:.35,dorsales:.32,biceps:.15,lumbares:.12,antebrazos:.06}],
+["remo-maquina","Remo en máquina (pecho apoyado)","maquina",105,"traccion_h",{espalda_alta:.38,dorsales:.35,biceps:.18,antebrazos:.09}],
+["remo-sello","Remo sello (seal row)","maquina",105,"traccion_h",{espalda_alta:.4,dorsales:.38,biceps:.16,antebrazos:.06}],
+["remo-convergente-bajo","Remo convergente bajo (Hammer)","maquina",105,"traccion_h",{dorsales:.48,espalda_alta:.25,biceps:.18,antebrazos:.09}],
+["remo-convergente-alto","Remo convergente alto (Hammer)","maquina",105,"traccion_h",{espalda_alta:.45,dorsales:.25,biceps:.18,hombros:.12}],
+["pullover-cable","Pullover en polea alta (brazos rígidos)","cable",90,"traccion_v",{dorsales:.65,triceps:.2,pecho:.15}],
+["pullover-maquina","Pullover en máquina","maquina",90,"traccion_v",{dorsales:.7,triceps:.18,pecho:.12}],
+["peso-muerto","Peso muerto convencional","barra",210,"bisagra",{gluteos:.24,isquios:.22,lumbares:.2,espalda_alta:.12,trapecio:.1,cuadriceps:.07,antebrazos:.05}],
+["rack-pull","Rack pull","barra",180,"bisagra",{lumbares:.22,espalda_alta:.2,trapecio:.2,gluteos:.15,isquios:.13,antebrazos:.1}],
+["banda-remo","Remo con banda","banda",60,"traccion_h",{dorsales:.38,espalda_alta:.3,biceps:.2,antebrazos:.12}],
+["banda-jalon","Jalón con banda","banda",60,"traccion_v",{dorsales:.52,espalda_alta:.18,biceps:.22,antebrazos:.08}],
+// ---- HOMBROS ----
+["press-militar","Press militar con barra (de pie)","barra",150,"empuje_v",{hombros:.5,triceps:.28,abdomen:.09,trapecio:.08,pecho:.05}],
+["press-militar-sentado","Press militar sentado","barra",150,"empuje_v",{hombros:.55,triceps:.3,trapecio:.08,pecho:.07}],
+["press-manc-sentado","Press de hombros con mancuernas","mancuernas",120,"empuje_v",{hombros:.55,triceps:.28,trapecio:.1,pecho:.07}],
+["press-arnold","Press Arnold","mancuernas",120,"empuje_v",{hombros:.6,triceps:.25,trapecio:.08,pecho:.07}],
+["press-smith-hombro","Press de hombros en Smith","maquina",135,"empuje_v",{hombros:.55,triceps:.3,trapecio:.08,pecho:.07}],
+["press-maquina-hombro","Press de hombros en máquina","maquina",105,"empuje_v",{hombros:.58,triceps:.28,trapecio:.07,pecho:.07}],
+["elev-laterales","Elevaciones laterales","mancuernas",60,"elev_lateral",{hombros:.85,trapecio:.15}],
+["elev-laterales-cable","Elevaciones laterales en polea","cable",60,"elev_lateral",{hombros:.88,trapecio:.12}],
+["elev-laterales-maquina","Elevaciones laterales en máquina","maquina",60,"elev_lateral",{hombros:.88,trapecio:.12}],
+["elev-frontales","Elevaciones frontales","mancuernas",60,"elev_lateral",{hombros:.85,pecho:.15}],
+["pajaros","Pájaros (deltoide posterior)","mancuernas",60,"elev_posterior",{hombros:.6,espalda_alta:.3,trapecio:.1}],
+["reverse-pec-deck","Pec deck invertido","maquina",75,"elev_posterior",{hombros:.6,espalda_alta:.32,trapecio:.08}],
+["face-pull","Face pull","cable",75,"elev_posterior",{hombros:.42,espalda_alta:.35,trapecio:.23}],
+["remo-menton","Remo al mentón","barra",90,"traccion_v",{hombros:.5,trapecio:.35,biceps:.15}],
+// ---- BÍCEPS ----
+["curl-barra","Curl con barra","barra",90,"curl_codo",{biceps:.75,antebrazos:.25}],
+["curl-barra-z","Curl con barra Z","barra",90,"curl_codo",{biceps:.78,antebrazos:.22}],
+["curl-alterno","Curl alterno con mancuernas","mancuernas",75,"curl_codo",{biceps:.8,antebrazos:.2}],
+["curl-martillo","Curl martillo","mancuernas",75,"curl_codo",{biceps:.6,antebrazos:.4}],
+["curl-inclinado","Curl inclinado en banco","mancuernas",90,"curl_codo",{biceps:.85,antebrazos:.15}],
+["curl-predicador","Curl predicador (Scott)","maquina",90,"curl_codo",{biceps:.85,antebrazos:.15}],
+["curl-maquina","Curl de bíceps en máquina","maquina",75,"curl_codo",{biceps:.88,antebrazos:.12}],
+["curl-cable","Curl en polea baja","cable",75,"curl_codo",{biceps:.8,antebrazos:.2}],
+["curl-bayesian","Curl bayesian en polea","cable",75,"curl_codo",{biceps:.85,antebrazos:.15}],
+["curl-concentrado","Curl concentrado","mancuernas",60,"curl_codo",{biceps:.88,antebrazos:.12}],
+["curl-arana","Curl araña","mancuernas",75,"curl_codo",{biceps:.88,antebrazos:.12}],
+// ---- TRÍCEPS ----
+["press-frances","Press francés","barra",90,"ext_codo",{triceps:.9,antebrazos:.1}],
+["ext-cable-barra","Extensión en polea con barra","cable",75,"ext_codo",{triceps:.92,antebrazos:.08}],
+["ext-cable-cuerda","Extensión en polea con cuerda","cable",75,"ext_codo",{triceps:.92,antebrazos:.08}],
+["ext-sobre-cabeza","Extensión sobre cabeza (mancuerna)","mancuernas",90,"ext_codo",{triceps:.9,antebrazos:.1}],
+["ext-sobre-cabeza-cable","Extensión sobre cabeza en polea","cable",75,"ext_codo",{triceps:.9,antebrazos:.1}],
+["ext-unilateral-cable","Extensión unilateral en polea","cable",60,"ext_codo",{triceps:.95,antebrazos:.05}],
+["fondos-triceps","Fondos en paralelas (tríceps)","corporal",120,"fondo",{triceps:.5,pecho:.3,hombros:.2}],
+["fondos-maquina","Fondos en máquina","maquina",105,"fondo",{triceps:.55,pecho:.28,hombros:.17}],
+["fondos-banco","Fondos entre bancos","corporal",90,"fondo",{triceps:.65,hombros:.2,pecho:.15}],
+["press-cerrado","Press banca agarre cerrado","barra",120,"empuje_h",{triceps:.45,pecho:.35,hombros:.2}],
+["patada-triceps","Patada trasera de tríceps","mancuernas",60,"ext_codo",{triceps:.9,hombros:.1}],
+// ---- ANTEBRAZOS ----
+["curl-muneca","Curl de muñeca","barra",60,"muneca",{antebrazos:1}],
+["curl-invertido","Curl invertido","barra",75,"curl_codo",{antebrazos:.6,biceps:.4}],
+["paseo-granjero","Paseo del granjero","mancuernas",120,"carga",{antebrazos:.4,trapecio:.3,abdomen:.2,hombros:.1}],
+// ---- ABDOMEN ----
+["crunch","Crunch abdominal","corporal",60,"core_flex",{abdomen:1}],
+["crunch-cable","Crunch en polea alta","cable",60,"core_flex",{abdomen:1}],
+["crunch-maquina","Crunch en máquina","maquina",60,"core_flex",{abdomen:1}],
+["elev-piernas","Elevaciones de piernas colgado","corporal",75,"core_flex",{abdomen:.9,antebrazos:.1}],
+["elev-piernas-tumbado","Elevaciones de piernas tumbado","corporal",60,"core_flex",{abdomen:1}],
+["plancha","Plancha","corporal",60,"core_iso",{abdomen:.8,lumbares:.2}],
+["plancha-lateral","Plancha lateral","corporal",60,"core_iso",{abdomen:1}],
+["rueda-abdominal","Rueda abdominal","corporal",90,"core_iso",{abdomen:.7,lumbares:.15,dorsales:.15}],
+["russian-twist","Giro ruso","corporal",60,"core_flex",{abdomen:1}],
+["press-pallof","Press Pallof","cable",60,"core_iso",{abdomen:1}],
+// ---- CUÁDRICEPS ----
+["sentadilla","Sentadilla trasera","barra",210,"sentadilla",{cuadriceps:.42,gluteos:.28,isquios:.1,lumbares:.12,abdomen:.08}],
+["sentadilla-frontal","Sentadilla frontal","barra",180,"sentadilla",{cuadriceps:.5,gluteos:.22,abdomen:.15,lumbares:.08,espalda_alta:.05}],
+["sentadilla-goblet","Sentadilla goblet","mancuernas",120,"sentadilla",{cuadriceps:.48,gluteos:.25,abdomen:.15,lumbares:.07,antebrazos:.05}],
+["sentadilla-smith","Sentadilla en Smith","maquina",150,"sentadilla",{cuadriceps:.5,gluteos:.28,isquios:.1,lumbares:.07,abdomen:.05}],
+["sentadilla-pendulo","Sentadilla péndulo","maquina",150,"sentadilla",{cuadriceps:.6,gluteos:.3,isquios:.1}],
+["prensa","Prensa de piernas","maquina",150,"sentadilla",{cuadriceps:.55,gluteos:.3,isquios:.15}],
+["prensa-unilateral","Prensa unilateral","maquina",120,"sentadilla",{cuadriceps:.55,gluteos:.32,isquios:.13}],
+["hack-squat","Hack squat","maquina",150,"sentadilla",{cuadriceps:.62,gluteos:.28,isquios:.1}],
+["extensiones-cuad","Extensiones de cuádriceps","maquina",75,"ext_rodilla",{cuadriceps:1}],
+["extension-unilateral","Extensión de cuádriceps unilateral","maquina",60,"ext_rodilla",{cuadriceps:1}],
+["zancadas","Zancadas con mancuernas","mancuernas",105,"zancada",{cuadriceps:.4,gluteos:.35,isquios:.15,abdomen:.1}],
+["zancadas-barra","Zancadas con barra","barra",120,"zancada",{cuadriceps:.4,gluteos:.35,isquios:.15,abdomen:.1}],
+["bulgara","Sentadilla búlgara","mancuernas",120,"zancada",{cuadriceps:.4,gluteos:.38,isquios:.14,abdomen:.08}],
+["step-up","Subida al cajón (step up)","mancuernas",90,"zancada",{cuadriceps:.45,gluteos:.4,isquios:.15}],
+["sissy-squat","Sentadilla sissy","corporal",90,"sentadilla",{cuadriceps:.95,abdomen:.05}],
+["aduccion-maquina","Aducción de cadera en máquina","maquina",60,"abduccion",{cuadriceps:.5,gluteos:.5}],
+["kb-goblet","Sentadilla goblet con kettlebell","kettlebell",105,"sentadilla",{cuadriceps:.48,gluteos:.27,abdomen:.15,antebrazos:.1}],
+// ---- ISQUIOS ----
+["peso-muerto-rumano","Peso muerto rumano","barra",150,"bisagra",{isquios:.4,gluteos:.3,lumbares:.2,espalda_alta:.05,antebrazos:.05}],
+["rumano-manc","Peso muerto rumano con mancuernas","mancuernas",120,"bisagra",{isquios:.4,gluteos:.3,lumbares:.2,espalda_alta:.05,antebrazos:.05}],
+["piernas-rigidas","Peso muerto piernas rígidas","barra",150,"bisagra",{isquios:.45,gluteos:.25,lumbares:.25,antebrazos:.05}],
+["curl-femoral-tumbado","Curl femoral tumbado","maquina",75,"flex_rodilla",{isquios:.9,gemelos:.1}],
+["curl-femoral-sentado","Curl femoral sentado","maquina",75,"flex_rodilla",{isquios:.95,gemelos:.05}],
+["curl-femoral-unilateral","Curl femoral unilateral","maquina",60,"flex_rodilla",{isquios:.95,gemelos:.05}],
+["curl-femoral-de-pie","Curl femoral de pie","maquina",60,"flex_rodilla",{isquios:.95,gemelos:.05}],
+["buenos-dias","Buenos días","barra",120,"bisagra",{isquios:.4,lumbares:.3,gluteos:.3}],
+["nordic-curl","Curl nórdico","corporal",120,"flex_rodilla",{isquios:.9,gemelos:.1}],
+// ---- GLÚTEOS ----
+["hip-thrust","Hip thrust con barra","barra",120,"empuje_cadera",{gluteos:.6,isquios:.25,cuadriceps:.1,lumbares:.05}],
+["hip-thrust-maquina","Hip thrust en máquina","maquina",105,"empuje_cadera",{gluteos:.62,isquios:.25,cuadriceps:.08,lumbares:.05}],
+["puente-gluteo","Puente de glúteo","corporal",75,"empuje_cadera",{gluteos:.65,isquios:.25,lumbares:.1}],
+["patada-gluteo-cable","Patada de glúteo en polea","cable",60,"empuje_cadera",{gluteos:.8,isquios:.2}],
+["abduccion-maquina","Abducción de cadera en máquina","maquina",60,"abduccion",{gluteos:1}],
+["kb-swing","Kettlebell swing","kettlebell",90,"bisagra",{gluteos:.4,isquios:.3,lumbares:.15,hombros:.1,abdomen:.05}],
+// ---- GEMELOS ----
+["gemelos-pie","Elevación de talones de pie","maquina",60,"gemelo",{gemelos:1}],
+["gemelos-sentado","Elevación de talones sentado","maquina",60,"gemelo",{gemelos:1}],
+["gemelos-prensa","Gemelos en prensa","maquina",60,"gemelo",{gemelos:1}],
+["gemelos-smith","Gemelos de pie en Smith","maquina",60,"gemelo",{gemelos:1}],
+// ---- TRAPECIO ----
+["encogimientos-barra","Encogimientos con barra","barra",90,"encogimiento",{trapecio:.85,antebrazos:.15}],
+["encogimientos-manc","Encogimientos con mancuernas","mancuernas",75,"encogimiento",{trapecio:.85,antebrazos:.15}],
+["encogimientos-maquina","Encogimientos en máquina","maquina",75,"encogimiento",{trapecio:.88,antebrazos:.12}],
+// ---- LUMBARES ----
+["hiperextensiones","Hiperextensiones","corporal",75,"bisagra",{lumbares:.45,gluteos:.35,isquios:.2}],
+["extension-espalda-maquina","Extensión de espalda en máquina","maquina",75,"bisagra",{lumbares:.6,gluteos:.4}],
+["superman","Superman","corporal",45,"core_iso",{lumbares:.7,gluteos:.3}],
 ];
 
-/* Mapa corporal esquemático (frente / espalda). data-m = clave de músculo */
-const SVG_FRENTE = `
-<svg viewBox="0 0 120 240" xmlns="http://www.w3.org/2000/svg" aria-label="Vista frontal">
- <circle cx="60" cy="18" r="12" fill="#20242b"/>
- <rect x="49" y="30" width="22" height="8" rx="3" fill="#20242b"/>
- <path class="musc" data-m="trapecio" d="M42 38 L60 34 L78 38 L72 44 L48 44 Z"/>
- <ellipse class="musc" data-m="hombros" cx="36" cy="48" rx="10" ry="9"/>
- <ellipse class="musc" data-m="hombros" cx="84" cy="48" rx="10" ry="9"/>
- <path class="musc" data-m="pecho" d="M44 44 h14 v20 q-7 5 -14 0 Z"/>
- <path class="musc" data-m="pecho" d="M62 44 h14 v20 q-7 5 -14 0 Z"/>
- <rect class="musc" data-m="biceps" x="27" y="58" width="12" height="26" rx="6"/>
- <rect class="musc" data-m="biceps" x="81" y="58" width="12" height="26" rx="6"/>
- <rect class="musc" data-m="antebrazos" x="25" y="86" width="11" height="28" rx="5"/>
- <rect class="musc" data-m="antebrazos" x="84" y="86" width="11" height="28" rx="5"/>
- <rect class="musc" data-m="abdomen" x="47" y="68" width="26" height="38" rx="7"/>
- <path fill="#20242b" d="M44 108 h32 v10 h-32 Z"/>
- <rect class="musc" data-m="cuadriceps" x="43" y="120" width="15" height="52" rx="7"/>
- <rect class="musc" data-m="cuadriceps" x="62" y="120" width="15" height="52" rx="7"/>
- <rect fill="#20242b" x="45" y="174" width="11" height="10" rx="4"/>
- <rect fill="#20242b" x="64" y="174" width="11" height="10" rx="4"/>
- <rect class="musc" data-m="gemelos" x="45" y="186" width="11" height="34" rx="5"/>
- <rect class="musc" data-m="gemelos" x="64" y="186" width="11" height="34" rx="5"/>
- <text x="60" y="236" text-anchor="middle" font-size="9" fill="#565c66">FRENTE</text>
-</svg>`;
-const SVG_ESPALDA = `
-<svg viewBox="0 0 120 240" xmlns="http://www.w3.org/2000/svg" aria-label="Vista posterior">
- <circle cx="60" cy="18" r="12" fill="#20242b"/>
- <path class="musc" data-m="trapecio" d="M60 30 L82 40 L74 62 L60 56 L46 62 L38 40 Z"/>
- <ellipse class="musc" data-m="hombros" cx="34" cy="48" rx="10" ry="9"/>
- <ellipse class="musc" data-m="hombros" cx="86" cy="48" rx="10" ry="9"/>
- <path class="musc" data-m="espalda" d="M44 58 L60 60 L76 58 L72 92 L60 98 L48 92 Z"/>
- <rect class="musc" data-m="triceps" x="26" y="58" width="12" height="27" rx="6"/>
- <rect class="musc" data-m="triceps" x="82" y="58" width="12" height="27" rx="6"/>
- <rect class="musc" data-m="antebrazos" x="24" y="87" width="11" height="27" rx="5"/>
- <rect class="musc" data-m="antebrazos" x="85" y="87" width="11" height="27" rx="5"/>
- <rect class="musc" data-m="lumbares" x="50" y="96" width="20" height="14" rx="5"/>
- <path class="musc" data-m="gluteos" d="M44 112 q16 -6 32 0 v14 q-16 8 -32 0 Z"/>
- <rect class="musc" data-m="isquios" x="43" y="130" width="15" height="42" rx="7"/>
- <rect class="musc" data-m="isquios" x="62" y="130" width="15" height="42" rx="7"/>
- <rect fill="#20242b" x="45" y="174" width="11" height="10" rx="4"/>
- <rect fill="#20242b" x="64" y="174" width="11" height="10" rx="4"/>
- <rect class="musc" data-m="gemelos" x="45" y="186" width="11" height="34" rx="5"/>
- <rect class="musc" data-m="gemelos" x="64" y="186" width="11" height="34" rx="5"/>
- <text x="60" y="236" text-anchor="middle" font-size="9" fill="#565c66">ESPALDA</text>
-</svg>`;
+/* Pictogramas de patrón de movimiento */
+const PICTOS = {
+ empuje_h: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="46" x2="50" y2="46" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="46" x2="14" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="46" x2="46" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="15" cy="41" r="3.6" fill="#F5A524"/><path d="M20 42 L36 42" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M36 42 L42 50 L48 50" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M24 41 L24 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="14" y1="26" x2="34" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="16" y1="21" x2="16" y2="31" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="32" y1="21" x2="32" y2="31" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ empuje_incl: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="54" x2="30" y2="30" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="24" y1="54" x2="30" y2="46" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="28" cy="29" r="3.6" fill="#F5A524"/><path d="M25 33 L14 46" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 46 L20 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M23 36 L34 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="28" y1="18" x2="42" y2="32" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="31" y1="14" x2="25" y2="21" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="45" y1="28" x2="39" y2="35" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ empuje_v: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="16" r="3.6" fill="#F5A524"/><path d="M32 20 L32 38 M32 38 L26 54 M32 38 L38 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 22 L25 10 M32 22 L39 10" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="18" y1="10" x2="46" y2="10" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="21" y1="5" x2="21" y2="15" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="43" y1="5" x2="43" y2="15" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ apertura: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="48" x2="50" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="48" x2="14" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="48" x2="46" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="17" cy="43" r="3.6" fill="#F5A524"/><path d="M22 44 L38 44 M38 44 L44 52 L50 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M27 43 Q20 32 13 30" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M27 43 Q34 30 41 28" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="29" r="2.5" fill="#565C66"/><circle cx="42" cy="27" r="2.5" fill="#565C66"/></svg>`,
+ fondo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="16" y1="26" x2="16" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="48" y1="26" x2="48" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="12" y1="26" x2="20" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="44" y1="26" x2="52" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="14" r="3.6" fill="#F5A524"/><path d="M32 18 L32 36 M32 36 L28 46 L33 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 21 L18 26 M32 21 L46 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ traccion_v: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="14" y1="9" x2="50" y2="9" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="20" r="3.6" fill="#F5A524"/><path d="M32 24 L32 42 M32 42 L27 52 M32 42 L37 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 25 L24 9 M32 25 L40 9" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ traccion_h: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="47" cy="20" r="3.6" fill="#F5A524"/><path d="M44 23 L26 34 M26 34 L24 56 M26 34 L32 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M38 27 L40 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="32" y1="44" x2="48" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="34" y1="40" x2="34" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="40" x2="46" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ bisagra: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="45" cy="25" r="3.6" fill="#F5A524"/><path d="M42 28 L28 36 M28 36 L28 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M36 31 L38 50" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="30" y1="50" x2="46" y2="50" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="32" y1="45" x2="32" y2="55" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="44" y1="45" x2="44" y2="55" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ sentadilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="28" cy="17" r="3.6" fill="#F5A524"/><path d="M29 21 L27 36 M27 36 L40 40 M40 40 L36 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <line x1="16" y1="22" x2="42" y2="22" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="18" y1="17" x2="18" y2="27" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="40" y1="17" x2="40" y2="27" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ zancada: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="30" cy="13" r="3.6" fill="#F5A524"/><path d="M30 17 L30 34" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M30 34 L40 40 L40 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 34 L22 46 L14 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M30 22 L36 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="37" cy="34" r="2.5" fill="#565C66"/></svg>`,
+ ext_rodilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="14" y1="30" x2="14" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="44" x2="32" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="17" cy="22" r="3.6" fill="#F5A524"/><path d="M18 26 L20 42 M20 42 L34 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M34 44 L46 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="48" cy="30" r="3" fill="#565C66"/></svg>`,
+ flex_rodilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="44" x2="46" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="12" y1="44" x2="12" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="42" y1="44" x2="42" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="13" cy="38" r="3.6" fill="#F5A524"/><path d="M18 40 L36 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M36 40 L30 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="29" cy="24" r="3" fill="#565C66"/></svg>`,
+ empuje_cadera: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="10" y1="34" x2="10" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="10" y1="34" x2="20" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="13" cy="28" r="3.6" fill="#F5A524"/><path d="M17 32 L32 34 M32 34 L40 46 L48 46 L48 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <line x1="24" y1="28" x2="40" y2="28" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="26" y1="23" x2="26" y2="33" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="38" y1="23" x2="38" y2="33" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ curl_codo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="12" r="3.6" fill="#F5A524"/><path d="M30 16 L30 38 M30 38 L26 56 M30 38 L36 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M30 22 L34 32 L42 24" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="38" y1="19" x2="48" y2="27" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ ext_codo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="44" y1="6" x2="44" y2="20" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="28" cy="14" r="3.6" fill="#F5A524"/><path d="M28 18 L28 40 M28 40 L24 56 M28 40 L34 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M28 24 L38 28 L44 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="38" y1="42" x2="50" y2="38" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ elev_lateral: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="14" r="3.6" fill="#F5A524"/><path d="M32 18 L32 40 M32 40 L27 56 M32 40 L37 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 24 L14 20 M32 24 L50 20" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="19" r="2.8" fill="#565C66"/><circle cx="52" cy="19" r="2.8" fill="#565C66"/></svg>`,
+ elev_posterior: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="46" cy="20" r="3.6" fill="#F5A524"/><path d="M43 23 L28 32 M28 32 L26 44 M28 32 L34 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M36 27 L24 16" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M36 27 L44 38" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="22" cy="14" r="2.8" fill="#565C66"/><circle cx="46" cy="40" r="2.8" fill="#565C66"/></svg>`,
+ encogimiento: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="13" r="3.6" fill="#F5A524"/><path d="M32 17 L32 38 M32 38 L27 56 M32 38 L37 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 21 L22 34 M32 21 L42 34" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="16" y1="34" x2="48" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <path d="M14 18 L14 12 M11 15 L14 12 L17 15" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M50 18 L50 12 M47 15 L50 12 L53 15" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ gemelo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="34" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="34" y1="56" x2="34" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="34" y1="48" x2="56" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="40" cy="10" r="3.6" fill="#F5A524"/><path d="M40 14 L40 30 M40 30 L40 42" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M40 42 L46 46 M46 46 L46 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ core_flex: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="52" x2="56" y2="52" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="17" cy="38" r="3.6" fill="#F5A524"/><path d="M21 41 Q28 44 32 46 M32 46 L40 36 L44 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M24 40 Q28 34 33 36" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ core_iso: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="54" x2="56" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="15" cy="36" r="3.6" fill="#F5A524"/><path d="M19 39 L44 44 L52 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 40 L18 54 L24 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ carga: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="12" r="3.6" fill="#F5A524"/><path d="M32 16 L32 36 M32 36 L26 48 L24 56 M32 36 L40 46 L42 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 20 L22 38 M32 20 L42 38" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="18" y="38" width="8" height="5" rx="1.5" fill="#565C66"/><rect x="38" y="38" width="8" height="5" rx="1.5" fill="#565C66"/></svg>`,
+ muneca: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="42" x2="40" y2="42" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="16" y1="42" x2="16" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="36" y1="42" x2="36" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <path d="M18 40 L38 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M38 40 L46 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="42" y1="26" x2="50" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ abduccion: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="20" y1="30" x2="44" y2="30" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="24" y1="30" x2="24" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="40" y1="30" x2="40" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="12" r="3.6" fill="#F5A524"/><path d="M32 16 L32 30" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 30 L20 44 L18 54 M32 30 L44 44 L46 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M16 38 L11 34 M48 38 L53 34" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+};
+
+/* Cuerpo anatómico (frente/espalda) */
+const SVG_FRENTE = `<svg viewBox="0 0 140 260" xmlns="http://www.w3.org/2000/svg"> <path fill="#1D2026" d="M70 3 C60 3 55 10 55 18 C55 24 57 28 60 31 C50 34 40 37 36 42 C30 49 28 60 27 72 C26 84 24 98 23 108 C22 116 25 119 29 118 C33 117 35 112 36 105 C38 94 40 82 42 74 C43 84 43 96 43 106 C43 122 46 136 47 152 C48 170 47 186 48 200 C49 220 52 238 56 248 C58 253 66 253 66 247 C66 236 64 220 64 204 C64 188 66 172 68 160 L72 160 C74 172 76 188 76 204 C76 220 74 236 74 247 C74 253 82 253 84 248 C88 238 91 220 92 200 C93 186 92 170 93 152 C94 136 97 122 97 106 C97 96 97 84 98 74 C100 82 102 94 104 105 C105 112 107 117 111 118 C115 119 118 116 117 108 C116 98 114 84 113 72 C112 60 110 49 104 42 C100 37 90 34 80 31 C83 28 85 24 85 18 C85 10 80 3 70 3 Z"/> <path class="musc" data-m="trapecio" d="M58 32 Q64 35 68 36 L68 41 Q60 40 53 42 Q55 36 58 32 Z"/><path class="musc" data-m="trapecio" d="M 82.0 32.0 Q 76.0 35.0 72.0 36.0 L 72.0 41.0 Q 80.0 40.0 87.0 42.0 Q 85.0 36.0 82.0 32.0 Z"/> <path class="musc" data-m="hombros" d="M52 43 Q42 44 38 51 Q36 58 39 63 Q46 64 51 60 Q54 51 52 43 Z"/><path class="musc" data-m="hombros" d="M 88.0 43.0 Q 98.0 44.0 102.0 51.0 Q 104.0 58.0 101.0 63.0 Q 94.0 64.0 89.0 60.0 Q 86.0 51.0 88.0 43.0 Z"/> <path class="musc" data-m="pecho" d="M54 44 Q66 42 68 46 L68 68 Q60 74 52 68 Q48 55 54 44 Z"/><path class="musc" data-m="pecho" d="M 86.0 44.0 Q 74.0 42.0 72.0 46.0 L 72.0 68.0 Q 80.0 74.0 88.0 68.0 Q 92.0 55.0 86.0 44.0 Z"/> <path class="musc" data-m="biceps" d="M40 66 Q36 68 35 76 Q34 86 36 93 Q40 96 44 93 Q46 84 45 74 Q44 68 40 66 Z"/><path class="musc" data-m="biceps" d="M 100.0 66.0 Q 104.0 68.0 105.0 76.0 Q 106.0 86.0 104.0 93.0 Q 100.0 96.0 96.0 93.0 Q 94.0 84.0 95.0 74.0 Q 96.0 68.0 100.0 66.0 Z"/> <path class="musc" data-m="antebrazos" d="M35 96 Q33 104 31 112 Q30 118 32 121 Q35 123 37 120 Q40 112 41 103 Q41 97 39 95 Q36 94 35 96 Z"/><path class="musc" data-m="antebrazos" d="M 105.0 96.0 Q 107.0 104.0 109.0 112.0 Q 110.0 118.0 108.0 121.0 Q 105.0 123.0 103.0 120.0 Q 100.0 112.0 99.0 103.0 Q 99.0 97.0 101.0 95.0 Q 104.0 94.0 105.0 96.0 Z"/> <path class="musc" data-m="abdomen" d="M56 72 Q66 76 68 76 L68 112 Q62 118 57 114 Q53 94 56 72 Z"/><path class="musc" data-m="abdomen" d="M 84.0 72.0 Q 74.0 76.0 72.0 76.0 L 72.0 112.0 Q 78.0 118.0 83.0 114.0 Q 87.0 94.0 84.0 72.0 Z"/> <path class="musc" data-m="cuadriceps" d="M48 122 Q45 140 47 158 Q49 172 54 176 Q60 176 63 170 Q66 150 65 130 Q64 120 58 118 Q51 118 48 122 Z"/><path class="musc" data-m="cuadriceps" d="M 92.0 122.0 Q 95.0 140.0 93.0 158.0 Q 91.0 172.0 86.0 176.0 Q 80.0 176.0 77.0 170.0 Q 74.0 150.0 75.0 130.0 Q 76.0 120.0 82.0 118.0 Q 89.0 118.0 92.0 122.0 Z"/> <path fill="#1D2026" d="M52 180 Q50 186 52 192 Q56 195 60 192 Q62 186 60 180 Q56 177 52 180 Z"/><path fill="#1D2026" d="M 88.0 180.0 Q 90.0 186.0 88.0 192.0 Q 84.0 195.0 80.0 192.0 Q 78.0 186.0 80.0 180.0 Q 84.0 177.0 88.0 180.0 Z"/> <path class="musc" data-m="gemelos" d="M52 196 Q49 208 51 224 Q53 232 57 232 Q61 230 62 220 Q63 206 61 197 Q56 193 52 196 Z"/><path class="musc" data-m="gemelos" d="M 88.0 196.0 Q 91.0 208.0 89.0 224.0 Q 87.0 232.0 83.0 232.0 Q 79.0 230.0 78.0 220.0 Q 77.0 206.0 79.0 197.0 Q 84.0 193.0 88.0 196.0 Z"/> <text x="70" y="257" text-anchor="middle" font-size="9" fill="#565c66" font-family="sans-serif">FRENTE</text> </svg>`;
+const SVG_ESPALDA = `<svg viewBox="0 0 140 260" xmlns="http://www.w3.org/2000/svg"> <path fill="#1D2026" d="M70 3 C60 3 55 10 55 18 C55 24 57 28 60 31 C50 34 40 37 36 42 C30 49 28 60 27 72 C26 84 24 98 23 108 C22 116 25 119 29 118 C33 117 35 112 36 105 C38 94 40 82 42 74 C43 84 43 96 43 106 C43 122 46 136 47 152 C48 170 47 186 48 200 C49 220 52 238 56 248 C58 253 66 253 66 247 C66 236 64 220 64 204 C64 188 66 172 68 160 L72 160 C74 172 76 188 76 204 C76 220 74 236 74 247 C74 253 82 253 84 248 C88 238 91 220 92 200 C93 186 92 170 93 152 C94 136 97 122 97 106 C97 96 97 84 98 74 C100 82 102 94 104 105 C105 112 107 117 111 118 C115 119 118 116 117 108 C116 98 114 84 113 72 C112 60 110 49 104 42 C100 37 90 34 80 31 C83 28 85 24 85 18 C85 10 80 3 70 3 Z"/> <path class="musc" data-m="trapecio" d="M70 30 Q78 34 84 38 Q76 46 70 60 Q64 46 56 38 Q62 34 70 30 Z"/> <path class="musc" data-m="hombros" d="M52 43 Q42 44 38 51 Q36 58 39 63 Q46 64 51 60 Q54 51 52 43 Z"/><path class="musc" data-m="hombros" d="M 88.0 43.0 Q 98.0 44.0 102.0 51.0 Q 104.0 58.0 101.0 63.0 Q 94.0 64.0 89.0 60.0 Q 86.0 51.0 88.0 43.0 Z"/> <path class="musc" data-m="espalda_alta" d="M53 45 Q62 50 68 61 L68 74 Q59 72 54 65 Q51 55 53 45 Z"/><path class="musc" data-m="espalda_alta" d="M 87.0 45.0 Q 78.0 50.0 72.0 61.0 L 72.0 74.0 Q 81.0 72.0 86.0 65.0 Q 89.0 55.0 87.0 45.0 Z"/> <path class="musc" data-m="dorsales" d="M47 64 Q54 74 66 77 L68 79 Q67 96 62 107 Q57 111 54 104 Q47 86 47 64 Z"/><path class="musc" data-m="dorsales" d="M 93.0 64.0 Q 86.0 74.0 74.0 77.0 L 72.0 79.0 Q 73.0 96.0 78.0 107.0 Q 83.0 111.0 86.0 104.0 Q 93.0 86.0 93.0 64.0 Z"/> <path class="musc" data-m="triceps" d="M40 66 Q36 68 35 76 Q34 86 36 93 Q40 96 44 93 Q46 84 45 74 Q44 68 40 66 Z"/><path class="musc" data-m="triceps" d="M 100.0 66.0 Q 104.0 68.0 105.0 76.0 Q 106.0 86.0 104.0 93.0 Q 100.0 96.0 96.0 93.0 Q 94.0 84.0 95.0 74.0 Q 96.0 68.0 100.0 66.0 Z"/> <path class="musc" data-m="antebrazos" d="M35 96 Q33 104 31 112 Q30 118 32 121 Q35 123 37 120 Q40 112 41 103 Q41 97 39 95 Q36 94 35 96 Z"/><path class="musc" data-m="antebrazos" d="M 105.0 96.0 Q 107.0 104.0 109.0 112.0 Q 110.0 118.0 108.0 121.0 Q 105.0 123.0 103.0 120.0 Q 100.0 112.0 99.0 103.0 Q 99.0 97.0 101.0 95.0 Q 104.0 94.0 105.0 96.0 Z"/> <path class="musc" data-m="lumbares" d="M62 98 Q66 100 68 100 L68 117 Q64 119 60 114 Q60 105 62 98 Z"/><path class="musc" data-m="lumbares" d="M 78.0 98.0 Q 74.0 100.0 72.0 100.0 L 72.0 117.0 Q 76.0 119.0 80.0 114.0 Q 80.0 105.0 78.0 98.0 Z"/> <path class="musc" data-m="gluteos" d="M50 120 Q60 116 68 120 L68 140 Q58 146 50 138 Q47 128 50 120 Z"/><path class="musc" data-m="gluteos" d="M 90.0 120.0 Q 80.0 116.0 72.0 120.0 L 72.0 140.0 Q 82.0 146.0 90.0 138.0 Q 93.0 128.0 90.0 120.0 Z"/> <path class="musc" data-m="isquios" d="M50 146 Q48 160 50 172 Q53 178 58 178 Q63 176 64 168 Q66 154 64 146 Q57 141 50 146 Z"/><path class="musc" data-m="isquios" d="M 90.0 146.0 Q 92.0 160.0 90.0 172.0 Q 87.0 178.0 82.0 178.0 Q 77.0 176.0 76.0 168.0 Q 74.0 154.0 76.0 146.0 Q 83.0 141.0 90.0 146.0 Z"/> <path class="musc" data-m="gemelos" d="M51 194 Q48 206 50 222 Q52 232 57 232 Q62 230 63 218 Q64 204 61 195 Q55 190 51 194 Z"/><path class="musc" data-m="gemelos" d="M 89.0 194.0 Q 92.0 206.0 90.0 222.0 Q 88.0 232.0 83.0 232.0 Q 78.0 230.0 77.0 218.0 Q 76.0 204.0 79.0 195.0 Q 85.0 190.0 89.0 194.0 Z"/> <text x="70" y="257" text-anchor="middle" font-size="9" fill="#565c66" font-family="sans-serif">ESPALDA</text> </svg>`;
+
+/* Programas preestablecidos — plantillas genéricas basadas en principios con respaldo:
+   frecuencia 2x/músculo/semana, 10-20 series semanales, sobrecarga progresiva.
+   r() genera las series objetivo. */
+const _r=(e,s,reps)=>({ejId:e,ss:null,series:Array.from({length:s},()=>({tipo:"N",peso:null,reps:reps,hecha:true}))});
+const PROGRAMAS = [
+{id:"fb3-hip",nombre:"Full Body 3 días — Hipertrofia",dias:3,objetivo:"hipertrofia",
+ desc:"Cuerpo completo 3 veces por semana (ej. L-X-V). Frecuencia alta por músculo con volumen moderado por sesión. Ideal si dispones de 3 días o estás en tus primeros 1-2 años de entrenamiento.",
+ rutinas:[
+  {nombre:"Full Body A",ejercicios:[_r("sentadilla",3,8),_r("press-banca",3,8),_r("remo-cable",3,10),_r("press-manc-sentado",2,12),_r("curl-femoral-tumbado",2,12),_r("curl-barra",2,12),_r("ext-cable-cuerda",2,12),_r("gemelos-pie",3,12)]},
+  {nombre:"Full Body B",ejercicios:[_r("peso-muerto-rumano",3,8),_r("press-inclinado-manc",3,10),_r("jalon-pecho",3,10),_r("prensa",3,12),_r("elev-laterales",3,15),_r("curl-martillo",2,12),_r("crunch-cable",3,12)]},
+  {nombre:"Full Body C",ejercicios:[_r("hack-squat",3,10),_r("press-militar",3,8),_r("remo-manc",3,10),_r("cruces-polea-media",2,15),_r("curl-femoral-sentado",2,12),_r("curl-inclinado",2,12),_r("fondos-triceps",2,10),_r("gemelos-sentado",3,15)]}]},
+{id:"fb3-fue",nombre:"Full Body 3 días — Fuerza",dias:3,objetivo:"fuerza",
+ desc:"Los básicos pesados 3 veces por semana con progresión lineal (estilo 5×5). Sube el peso cada sesión mientras completes todas las series. La vía más probada para construir fuerza base.",
+ rutinas:[
+  {nombre:"Fuerza A",ejercicios:[_r("sentadilla",5,5),_r("press-banca",5,5),_r("remo-barra",5,5),_r("plancha",3,45)]},
+  {nombre:"Fuerza B",ejercicios:[_r("sentadilla",5,5),_r("press-militar",5,5),_r("peso-muerto",3,5),_r("dominadas",3,8)]}],
+ nota:"Alterna A-B-A, B-A-B por semanas."},
+{id:"tp4-hip",nombre:"Torso / Pierna 4 días — Hipertrofia",dias:4,objetivo:"hipertrofia",
+ desc:"Dos días de torso y dos de pierna (ej. L-M-J-V). El mejor equilibrio entre frecuencia 2x, volumen por sesión y recuperación. Probablemente la estructura más recomendada para intermedios.",
+ rutinas:[
+  {nombre:"Torso 1 (fuerza)",ejercicios:[_r("press-banca",4,6),_r("remo-barra",4,6),_r("press-militar",3,8),_r("jalon-pecho",3,10),_r("curl-barra",3,10),_r("ext-cable-barra",3,10)]},
+  {nombre:"Pierna 1 (fuerza)",ejercicios:[_r("sentadilla",4,6),_r("peso-muerto-rumano",3,8),_r("prensa",3,10),_r("curl-femoral-tumbado",3,10),_r("gemelos-pie",4,10),_r("crunch-cable",3,12)]},
+  {nombre:"Torso 2 (volumen)",ejercicios:[_r("press-inclinado-manc",3,10),_r("remo-cable",3,12),_r("cruces-polea-media",3,15),_r("elev-laterales",4,15),_r("face-pull",3,15),_r("curl-inclinado",3,12),_r("ext-sobre-cabeza-cable",3,12)]},
+  {nombre:"Pierna 2 (volumen)",ejercicios:[_r("hack-squat",3,10),_r("hip-thrust",3,10),_r("bulgara",3,12),_r("curl-femoral-sentado",3,12),_r("gemelos-sentado",4,15),_r("elev-piernas",3,12)]}]},
+{id:"tp4-fue",nombre:"Torso / Pierna 4 días — Fuerza",dias:4,objetivo:"fuerza",
+ desc:"Estructura torso/pierna orientada a los levantamientos principales en rangos de 3-6 repeticiones, con accesorios mínimos. Más descanso entre series (3-4 min en básicos).",
+ rutinas:[
+  {nombre:"Torso pesado",ejercicios:[_r("press-banca",5,4),_r("remo-pendlay",4,5),_r("press-militar",3,6),_r("dominadas-supinas",3,6)]},
+  {nombre:"Pierna pesada",ejercicios:[_r("sentadilla",5,4),_r("peso-muerto",3,4),_r("prensa",3,8),_r("plancha",3,45)]},
+  {nombre:"Torso volumen",ejercicios:[_r("press-inclinado-barra",4,6),_r("remo-t",4,8),_r("press-manc-sentado",3,8),_r("jalon-cerrado",3,8),_r("curl-barra",3,8),_r("press-frances",3,8)]},
+  {nombre:"Pierna volumen",ejercicios:[_r("sentadilla-frontal",4,6),_r("peso-muerto-rumano",4,8),_r("zancadas-barra",3,10),_r("curl-femoral-tumbado",3,10),_r("gemelos-pie",4,10)]}]},
+{id:"ppl6",nombre:"Push / Pull / Legs 6 días — Hipertrofia",dias:6,objetivo:"hipertrofia",
+ desc:"Empuje, tirón y pierna, dos vueltas por semana. Máximo volumen semanal con sesiones enfocadas. Requiere buena recuperación (sueño y comida): es para quien ya entrena en serio y dispone de 6 días.",
+ rutinas:[
+  {nombre:"Push (empuje)",ejercicios:[_r("press-banca",4,8),_r("press-inclinado-manc",3,10),_r("press-maquina-hombro",3,10),_r("elev-laterales",4,15),_r("cruces-polea-alta",3,15),_r("ext-cable-cuerda",3,12),_r("ext-sobre-cabeza-cable",2,12)]},
+  {nombre:"Pull (tirón)",ejercicios:[_r("jalon-ancho",4,10),_r("remo-cable",4,10),_r("remo-convergente-alto",3,12),_r("face-pull",3,15),_r("curl-barra-z",3,10),_r("curl-martillo",3,12),_r("encogimientos-manc",3,12)]},
+  {nombre:"Legs (pierna)",ejercicios:[_r("sentadilla",4,8),_r("peso-muerto-rumano",3,10),_r("prensa",3,12),_r("curl-femoral-sentado",3,12),_r("extensiones-cuad",3,15),_r("gemelos-pie",5,12),_r("crunch-cable",3,15)]}],
+ nota:"Repite el ciclo 2 veces por semana (P-P-L-P-P-L + descanso). Varía ejercicios entre la 1ª y 2ª vuelta si quieres."},
+{id:"ppl3",nombre:"Push / Pull / Legs 3 días (rotativo)",dias:3,objetivo:"hipertrofia",
+ desc:"La misma división PPL pero una vuelta por semana, con más volumen por sesión. Buena opción si te gusta la división por patrones pero solo dispones de 3 días.",
+ rutinas:[
+  {nombre:"Push",ejercicios:[_r("press-banca",4,8),_r("press-inclinado-manc",3,10),_r("press-militar-sentado",3,10),_r("elev-laterales",4,15),_r("pec-deck",3,15),_r("ext-cable-barra",3,12),_r("ext-unilateral-cable",2,15)]},
+  {nombre:"Pull",ejercicios:[_r("dominadas",4,8),_r("remo-barra",4,8),_r("remo-cable-ancho",3,12),_r("pullover-cable",3,12),_r("face-pull",3,15),_r("curl-alterno",3,10),_r("curl-bayesian",3,12)]},
+  {nombre:"Legs",ejercicios:[_r("sentadilla",4,8),_r("peso-muerto-rumano",4,10),_r("hack-squat",3,10),_r("curl-femoral-tumbado",3,12),_r("hip-thrust",3,10),_r("gemelos-pie",4,12),_r("elev-piernas",3,12)]}]},
+{id:"pb4",nombre:"Powerbuilding 4 días",dias:4,objetivo:"mixto",
+ desc:"Fuerza y estética a la vez: cada sesión abre con un básico pesado (3-5 reps) y sigue con accesorios de hipertrofia (8-15). El punto medio con más respaldo práctico entre ambos mundos.",
+ rutinas:[
+  {nombre:"Banca + empuje",ejercicios:[_r("press-banca",4,4),_r("press-inclinado-manc",3,10),_r("press-convergente-plano",3,12),_r("elev-laterales",4,15),_r("ext-cable-cuerda",3,12)]},
+  {nombre:"Sentadilla + pierna",ejercicios:[_r("sentadilla",4,4),_r("prensa",3,10),_r("curl-femoral-sentado",3,12),_r("extensiones-cuad",3,15),_r("gemelos-pie",4,12)]},
+  {nombre:"Press militar + hombro",ejercicios:[_r("press-militar",4,5),_r("press-manc-sentado",3,10),_r("elev-laterales-cable",4,15),_r("reverse-pec-deck",3,15),_r("curl-barra",3,10),_r("press-frances",3,10)]},
+  {nombre:"Peso muerto + tirón",ejercicios:[_r("peso-muerto",4,3),_r("remo-t",3,10),_r("jalon-pecho",3,10),_r("remo-alto-polea",3,12),_r("curl-martillo",3,12),_r("crunch-cable",3,15)]}]},
+{id:"hib5",nombre:"Híbrido 5 días (Torso/Pierna + PPL)",dias:5,objetivo:"hipertrofia",
+ desc:"Torso y pierna pesados al inicio de semana, y una vuelta PPL de volumen al final. Frecuencia 2x con 5 días: el escalón natural entre el 4 días y el PPL completo de 6.",
+ rutinas:[
+  {nombre:"Torso pesado",ejercicios:[_r("press-banca",4,6),_r("remo-barra",4,6),_r("press-militar",3,8),_r("jalon-cerrado",3,8),_r("curl-barra",3,10),_r("press-frances",3,10)]},
+  {nombre:"Pierna pesada",ejercicios:[_r("sentadilla",4,6),_r("peso-muerto-rumano",3,8),_r("prensa",3,10),_r("curl-femoral-tumbado",3,10),_r("gemelos-pie",4,10)]},
+  {nombre:"Push volumen",ejercicios:[_r("press-inclinado-manc",3,10),_r("press-maquina",3,12),_r("elev-laterales",4,15),_r("cruces-polea-alta",3,15),_r("ext-cable-cuerda",3,12)]},
+  {nombre:"Pull volumen",ejercicios:[_r("jalon-ancho",3,10),_r("remo-cable",3,12),_r("remo-convergente-alto",3,12),_r("face-pull",3,15),_r("curl-inclinado",3,12),_r("curl-martillo",2,12)]},
+  {nombre:"Pierna volumen",ejercicios:[_r("hack-squat",3,10),_r("hip-thrust",3,10),_r("bulgara",3,12),_r("curl-femoral-sentado",3,12),_r("gemelos-sentado",4,15),_r("crunch-cable",3,15)]}]},
+];
+
 
 /* =====================================================
    Estado + IndexedDB
@@ -586,7 +740,7 @@ let db;
 const ESTADO = {
   entrenos: [],            // historial guardado
   personalizados: [],      // ejercicios creados/editados por el usuario
-  rutinas: [],
+  planes: [],              // [{id,nombre,rutinas:[{id,nombre,ejercicios:[...]}]}]
   prefs: { barra:20, discos:[25,20,15,10,5,2.5,1.25], descanso:90, redondeo:2.5, formula:"epley" },
   readiness: null,         // {fecha, sueno, dolor, energia}
   activo: null             // entrenamiento en curso
@@ -613,12 +767,32 @@ const dbAll = store=>new Promise((res,rej)=>{const r=tx(store,"readonly").getAll
 const kvSet = (k,v)=>dbPut("kv",{k,v});
 const kvGet = k=>new Promise((res)=>{const r=tx("kv","readonly").get(k);r.onsuccess=()=>res(r.result?r.result.v:null);r.onerror=()=>res(null);});
 
+function normalizarEj(e){
+  // migración desde V1: "espalda" -> "dorsales"; {m,sec} -> mapa de activación
+  if(e.m==="espalda") e.m="dorsales";
+  if(e.sec) e.sec=e.sec.map(s=>s==="espalda"?"dorsales":s);
+  if(e.act && e.act.espalda){ e.act.dorsales=(e.act.dorsales||0)+e.act.espalda; delete e.act.espalda; }
+  if(!e.act){
+    e.act={[e.m]:1};
+    (e.sec||[]).forEach(s=>e.act[s]=.5);
+    const total=Object.values(e.act).reduce((a,b)=>a+b,0);
+    Object.keys(e.act).forEach(k=>e.act[k]=+(e.act[k]/total).toFixed(3));
+  }
+  const orden=Object.entries(e.act).sort((a,b)=>b[1]-a[1]);
+  e.m=orden[0][0];
+  e.sec=orden.slice(1).map(x=>x[0]);
+  return e;
+}
 function reconstruirMapa(){
   mapaEjercicios = new Map();
-  BIBLIOTECA.forEach(([id,nombre,m,sec,eq,descanso])=>mapaEjercicios.set(id,{id,nombre,m,sec,eq,descanso,notas:"",custom:false}));
-  ESTADO.personalizados.forEach(e=>mapaEjercicios.set(e.id,e)); // overrides y personalizados
+  BIBLIOTECA.forEach(([id,nombre,eq,descanso,patron,act])=>
+    mapaEjercicios.set(id, normalizarEj({id,nombre,eq,descanso,patron,act:{...act},notas:"",custom:false})));
+  ESTADO.personalizados.forEach(e=>{
+    const base=mapaEjercicios.get(e.id);
+    mapaEjercicios.set(e.id, normalizarEj({...(base||{}), ...e}));
+  });
 }
-const ej = id => mapaEjercicios.get(id) || {id,nombre:"(ejercicio eliminado)",m:"abdomen",sec:[],eq:"corporal",descanso:90};
+const ej = id => mapaEjercicios.get(id) || {id,nombre:"(ejercicio eliminado)",m:"abdomen",sec:[],act:{abdomen:1},eq:"corporal",descanso:90,patron:null};
 
 /* =====================================================
    Utilidades
@@ -724,8 +898,8 @@ function calcularFrescura(){
     const horas=(ahora-ts)/3600000;
     if(horas>72) return;
     const resto=1-horas/72, e=ej(ejId);
-    fat[e.m]=(fat[e.m]||0)+resto;
-    (e.sec||[]).forEach(s=>fat[s]=(fat[s]||0)+resto*0.5);
+    const max=Math.max(...Object.values(e.act));
+    Object.entries(e.act).forEach(([m,w])=>fat[m]=(fat[m]||0)+resto*(w/max));
   };
   ESTADO.entrenos.forEach(en=>en.ejercicios.forEach(b=>b.series.forEach(s=>{
     if(s.hecha && s.tipo!=="C") procesar(b.ejId, s.ts||en.id);
@@ -750,6 +924,16 @@ function pintarMapa(){
   $("leyenda-musculos").innerHTML = Object.entries(MUSCULOS).map(([k,n])=>
     `<div class="item"><span class="nom"><span class="punto" style="background:${colorFrescura(fres[k])}"></span>${n}</span><b>${fres[k]}%</b></div>`
   ).join("");
+}
+function pictoDe(e){ return e.patron && PICTOS[e.patron] ? PICTOS[e.patron] : ""; }
+function mapaActivacionHTML(act){
+  const max=Math.max(...Object.values(act));
+  const colorear=svg=>svg.replace(/class="musc" data-m="([a-z_]+)"/g,(t,m)=>{
+    const w=act[m];
+    const fill=w? `rgba(245,165,36,${(0.16+0.84*(w/max)).toFixed(2)})` : "#20242b";
+    return `class="musc" data-m="${m}" fill="${fill}"`;
+  });
+  return `<div class="mapa-act">${colorear(SVG_FRENTE)}${colorear(SVG_ESPALDA)}</div>`;
 }
 
 /* =====================================================
@@ -839,7 +1023,7 @@ function pintarHoy(){
   $("hoy-inicio").style.display=activo?"none":"block";
   $("hoy-activo").style.display=activo?"block":"none";
   if(activo){ pintarBloques(); $("crono").textContent=fmtDur(Date.now()-ESTADO.activo.inicio); }
-  else { pintarReadiness(); pintarMapa(); pintarHistorial(); pintarRutinas();
+  else { pintarReadiness(); pintarMapa(); pintarHistorial(); pintarPlanes();
     $("btn-repetir").style.display = ESTADO.entrenos.length?"flex":"none"; }
 }
 function pintarBloques(){
@@ -887,9 +1071,11 @@ function filaSerie(bi,si,s){
       <button class="check" onclick="alternarHecha(${bi},${si})">${s.hecha?"✓":""}</button>
     </div></div>`;
 }
-async function abrirSelectorEjercicio(){ pintarSelector(); abrirModal("m-selector"); }
+let selectorDestino="entreno";
+async function abrirSelectorEjercicio(destino){ selectorDestino=destino==="editor"?"editor":"entreno"; pintarSelector(); abrirModal("m-selector"); }
 async function agregarEjercicioActivo(id){
   cerrarModal("m-selector");
+  if(selectorDestino==="editor"){ agregarEjEditor(id); return; }
   const prev=ultimaSesionDe(id);
   const series = prev
     ? prev.series.filter(s=>s.tipo!=="C").map(s=>({tipo:"N",peso:s.peso,reps:s.reps,rpe:null,hecha:false,ts:null}))
@@ -1014,8 +1200,13 @@ async function confirmarGuardarEntreno(){
   ESTADO.entrenos.sort((x,y)=>x.id-y.id);
   if($("resumen-guardar-rutina").checked){
     const nombre=prompt("Nombre de la rutina:", "Rutina "+fmtFecha(a.fecha));
-    if(nombre){ ESTADO.rutinas.push({id:Date.now(),nombre,ejercicios:a.ejercicios.map(b=>({ejId:b.ejId,ss:b.ss,series:b.series.map(s=>({tipo:s.tipo,peso:s.peso,reps:s.reps,hecha:true}))}))});
-      await kvSet("rutinas",ESTADO.rutinas); }
+    if(nombre){
+      const rutina={id:Date.now(),nombre,ejercicios:a.ejercicios.map(b=>({ejId:b.ejId,ss:b.ss,series:b.series.map(s=>({tipo:s.tipo,peso:s.peso,reps:s.reps,hecha:true}))}))};
+      let plan=ESTADO.planes.find(p=>p.nombre==="Mis rutinas");
+      if(!plan){ plan={id:Date.now()+1,nombre:"Mis rutinas",rutinas:[]}; ESTADO.planes.push(plan); }
+      plan.rutinas.push(rutina);
+      await kvSet("planes",ESTADO.planes);
+    }
   }
   ESTADO.activo=null; await kvSet("activo",null);
   cerrarModal("m-resumen"); pararCrono(); soltarWake(); pararDescanso();
@@ -1023,24 +1214,185 @@ async function confirmarGuardarEntreno(){
   pintarHoy(); toast("Entrenamiento guardado 💪");
 }
 
-/* ---- rutinas ---- */
-function pintarRutinas(){
-  const hay=ESTADO.rutinas.length>0;
-  $("card-rutinas").style.display=hay?"block":"none";
-  if(!hay) return;
-  $("lista-rutinas").innerHTML=ESTADO.rutinas.map((r,i)=>`
-    <div class="item-lista">
-      <div><div class="tit">${r.nombre}</div><div class="det">${r.ejercicios.length} ejercicios</div></div>
-      <div style="display:flex;gap:.4rem">
-        <button class="btn mini primario" onclick="usarRutina(${i})">Usar</button>
-        <button class="btn mini fantasma" onclick="borrarRutina(${i})">✕</button>
+/* ---- planes y rutinas ---- */
+let planesAbiertos=new Set();
+function pintarPlanes(){
+  const cont=$("lista-planes");
+  if(!ESTADO.planes.length){
+    cont.innerHTML=`<div class="vacio" style="padding:.6rem 0">Crea tu primera rutina o adopta un programa preestablecido.</div>`;
+    return;
+  }
+  cont.innerHTML=ESTADO.planes.map(p=>{
+    const abierto=planesAbiertos.has(p.id);
+    return `<div>
+      <div class="plan-cab" onclick="alternarPlan(${p.id})">
+        <span class="tit">${abierto?"▾":"▸"} ${p.nombre}</span>
+        <span style="display:flex;gap:.35rem;align-items:center">
+          <span class="chip">${p.rutinas.length} rutina${p.rutinas.length!==1?"s":""}</span>
+          <button class="btn mini fantasma" onclick="event.stopPropagation();renombrarPlan(${p.id})">✎</button>
+          <button class="btn mini fantasma" onclick="event.stopPropagation();borrarPlan(${p.id})">✕</button>
+        </span>
       </div>
-    </div>`).join("");
+      ${abierto? p.rutinas.map(r=>`
+        <div class="rutina-fila">
+          <div style="min-width:0"><div class="tit" style="font-size:.86rem">${r.nombre}</div>
+          <div class="peq muted">${r.ejercicios.length} ejercicios · ${r.ejercicios.reduce((a,b)=>a+b.series.length,0)} series</div></div>
+          <div style="display:flex;gap:.3rem">
+            <button class="btn mini primario" onclick="usarRutina(${p.id},${r.id})">Usar</button>
+            <button class="btn mini" onclick="abrirEditorRutina(${p.id},${r.id})">✎</button>
+            <button class="btn mini fantasma" onclick="borrarRutina(${p.id},${r.id})">✕</button>
+          </div>
+        </div>`).join("") : ""}
+    </div>`;
+  }).join("");
 }
-function usarRutina(i){ empezarDesdePlantilla(ESTADO.rutinas[i]); }
-async function borrarRutina(i){
-  if(!confirm("¿Borrar la rutina \""+ESTADO.rutinas[i].nombre+"\"?")) return;
-  ESTADO.rutinas.splice(i,1); await kvSet("rutinas",ESTADO.rutinas); pintarRutinas();
+function alternarPlan(id){ planesAbiertos.has(id)?planesAbiertos.delete(id):planesAbiertos.add(id); pintarPlanes(); }
+const buscarPlan=id=>ESTADO.planes.find(p=>p.id===id);
+const buscarRutina=(pid,rid)=>{const p=buscarPlan(pid);return p&&p.rutinas.find(r=>r.id===rid);};
+function usarRutina(pid,rid){ const r=buscarRutina(pid,rid); if(r) empezarDesdePlantilla(r); }
+async function borrarRutina(pid,rid){
+  const p=buscarPlan(pid), r=buscarRutina(pid,rid);
+  if(!r||!confirm(`¿Borrar la rutina "${r.nombre}"?`)) return;
+  p.rutinas=p.rutinas.filter(x=>x.id!==rid);
+  await kvSet("planes",ESTADO.planes); pintarPlanes();
+}
+async function renombrarPlan(pid){
+  const p=buscarPlan(pid), nombre=prompt("Nombre del plan:",p.nombre);
+  if(nombre&&nombre.trim()){ p.nombre=nombre.trim(); await kvSet("planes",ESTADO.planes); pintarPlanes(); }
+}
+async function borrarPlan(pid){
+  const p=buscarPlan(pid);
+  if(!confirm(`¿Borrar el plan "${p.nombre}" y sus ${p.rutinas.length} rutinas?`)) return;
+  ESTADO.planes=ESTADO.planes.filter(x=>x.id!==pid);
+  await kvSet("planes",ESTADO.planes); pintarPlanes();
+}
+
+/* ---- editor de rutinas ---- */
+let editor=null;
+function abrirEditorRutina(pid,rid){
+  const r=rid?buscarRutina(pid,rid):null;
+  editor={ planId:pid||null, rutinaId:rid||null,
+    ejercicios: r? r.ejercicios.map(b=>({ejId:b.ejId,ss:b.ss||null,n:b.series.length,
+      reps:b.series[0]?b.series[0].reps:null,peso:b.series[0]?b.series[0].peso:null})) : [] };
+  $("editor-titulo").textContent=r?"Editar rutina":"Nueva rutina";
+  $("ed-nombre").value=r?r.nombre:"";
+  $("ed-plan-nuevo").value="";
+  const sel=$("ed-plan");
+  sel.innerHTML=ESTADO.planes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join("")+`<option value="__nuevo">＋ Plan nuevo…</option>`;
+  if(editor.planId) sel.value=editor.planId;
+  else if(!ESTADO.planes.length) sel.value="__nuevo";
+  edPlanCambio(); pintarEditorEjercicios(); abrirModal("m-editor");
+}
+function edPlanCambio(){ $("ed-plan-nuevo-campo").style.display = $("ed-plan").value==="__nuevo"?"block":"none"; }
+function pintarEditorEjercicios(){
+  $("ed-ejercicios").innerHTML = editor.ejercicios.length? editor.ejercicios.map((x,i)=>{
+    const e=ej(x.ejId);
+    return `<div class="ed-ej" style="${x.ss?"border-left:3px solid var(--accent)":""}">
+      <div class="fila espacio">
+        <div class="fila" style="min-width:0"><div class="picto">${pictoDe(e)}</div>
+          <div style="min-width:0"><b style="font-size:.88rem">${e.nombre}</b>
+          <div class="peq muted">${MUSCULOS[e.m]}${x.ss?` · <b style="color:var(--accent)">SS ${x.ss}</b>`:""}</div></div></div>
+        <div style="display:flex;gap:.3rem">
+          ${i>0?`<button class="btn mini fantasma" title="Superserie con el anterior" onclick="editorSS(${i})">⛓</button>`:""}
+          <button class="btn mini fantasma" onclick="quitarEjEditor(${i})">✕</button>
+        </div>
+      </div>
+      <div class="grid3">
+        <div><label class="peq muted">Series</label><input type="number" inputmode="numeric" value="${x.n}" onchange="editor.ejercicios[${i}].n=+this.value||1"></div>
+        <div><label class="peq muted">Reps</label><input type="number" inputmode="numeric" value="${x.reps??""}" placeholder="—" onchange="editor.ejercicios[${i}].reps=this.value===''?null:+this.value"></div>
+        <div><label class="peq muted">Peso kg</label><input type="number" inputmode="decimal" step="0.5" value="${x.peso??""}" placeholder="—" onchange="editor.ejercicios[${i}].peso=this.value===''?null:+this.value"></div>
+      </div>
+    </div>`;
+  }).join("") : `<div class="vacio" style="padding:.5rem 0">Añade el primer ejercicio.</div>`;
+}
+function agregarEjEditor(id){ editor.ejercicios.push({ejId:id,ss:null,n:3,reps:10,peso:null}); pintarEditorEjercicios(); abrirModal("m-editor"); }
+function quitarEjEditor(i){ editor.ejercicios.splice(i,1); pintarEditorEjercicios(); }
+function editorSS(i){
+  const x=editor.ejercicios[i];
+  if(x.ss){ x.ss=null; }
+  else{ const ant=editor.ejercicios[i-1];
+    if(!ant.ss) ant.ss=String.fromCharCode(65+editor.ejercicios.filter(y=>y.ss).length%6);
+    x.ss=ant.ss; }
+  pintarEditorEjercicios();
+}
+async function guardarRutinaEditor(){
+  const nombre=$("ed-nombre").value.trim();
+  if(!nombre) return toast("Ponle un nombre a la rutina");
+  if(!editor.ejercicios.length) return toast("Añade al menos un ejercicio");
+  let plan;
+  if($("ed-plan").value==="__nuevo"){
+    const pn=$("ed-plan-nuevo").value.trim()||"Mi plan";
+    plan={id:Date.now(),nombre:pn,rutinas:[]}; ESTADO.planes.push(plan);
+  } else plan=buscarPlan(+$("ed-plan").value);
+  const rutina={ id: editor.rutinaId||Date.now()+1, nombre,
+    ejercicios: editor.ejercicios.map(x=>({ejId:x.ejId,ss:x.ss,
+      series:Array.from({length:Math.max(1,x.n)},()=>({tipo:"N",peso:x.peso,reps:x.reps,hecha:true}))})) };
+  if(editor.rutinaId) ESTADO.planes.forEach(p=>p.rutinas=p.rutinas.filter(r=>r.id!==editor.rutinaId));
+  plan.rutinas.push(rutina);
+  await kvSet("planes",ESTADO.planes);
+  planesAbiertos.add(plan.id);
+  cerrarModal("m-editor"); pintarPlanes(); toast("Rutina guardada");
+}
+
+/* ---- programas preestablecidos ---- */
+function abrirProgramas(){
+  $("lista-programas").innerHTML=PROGRAMAS.map(p=>`
+    <div class="item-lista" onclick="abrirPrograma('${p.id}')">
+      <div style="min-width:0"><div class="tit">${p.nombre}</div>
+      <div class="det">${p.dias} días/sem · ${p.objetivo==="fuerza"?"Fuerza":p.objetivo==="mixto"?"Fuerza + volumen":"Hipertrofia"}</div></div>
+      <span class="muted">›</span></div>`).join("");
+  abrirModal("m-programas");
+}
+function abrirPrograma(id){
+  const p=PROGRAMAS.find(x=>x.id===id);
+  cerrarModal("m-programas");
+  $("prog-titulo").textContent=p.nombre;
+  $("prog-contenido").innerHTML=
+    `<div class="fila" style="gap:.35rem;margin-bottom:.6rem"><span class="chip acento">${p.dias} días/sem</span><span class="chip ${p.objetivo==="fuerza"?"pr":""}">${p.objetivo==="fuerza"?"Fuerza":p.objetivo==="mixto"?"Fuerza + volumen":"Hipertrofia"}</span></div>`+
+    `<p class="peq muted" style="margin-bottom:.9rem">${p.desc}</p>`+
+    p.rutinas.map(r=>`<div style="margin-bottom:.8rem"><b>${r.nombre}</b>
+      <div class="peq muted" style="margin-top:2px">${r.ejercicios.map(x=>`${ej(x.ejId).nombre} ${x.series.length}×${x.series[0].reps}`).join(" · ")}</div></div>`).join("")+
+    (p.nota?`<p class="peq" style="color:var(--accent)">💡 ${p.nota}</p>`:"");
+  $("prog-adoptar").onclick=()=>adoptarPrograma(id);
+  abrirModal("m-programa-det");
+}
+async function adoptarPrograma(id){
+  const p=PROGRAMAS.find(x=>x.id===id);
+  const plan={ id:Date.now(), nombre:p.nombre,
+    rutinas:p.rutinas.map((r,i)=>({id:Date.now()+i+1,nombre:r.nombre,
+      ejercicios:r.ejercicios.map(x=>({ejId:x.ejId,ss:x.ss||null,series:x.series.map(s=>({...s}))}))})) };
+  ESTADO.planes.push(plan);
+  await kvSet("planes",ESTADO.planes);
+  planesAbiertos.add(plan.id);
+  cerrarModal("m-programa-det"); pintarPlanes(); toast("Programa adoptado como plan");
+}
+
+/* ---- calendario de entrenamiento ---- */
+let calMes=new Date();
+function moverCal(d){ calMes.setMonth(calMes.getMonth()+d); pintarCalendario(); }
+function pintarCalendario(){
+  const y=calMes.getFullYear(), m=calMes.getMonth();
+  $("cal-titulo").textContent=calMes.toLocaleDateString("es",{month:"long",year:"numeric"});
+  const porDia={};
+  ESTADO.entrenos.forEach(en=>{ (porDia[en.fecha]=porDia[en.fecha]||[]).push(en.id); });
+  const inicio=(new Date(y,m,1).getDay()+6)%7, dias=new Date(y,m+1,0).getDate(), hoy=hoyISO();
+  let html=["L","M","X","J","V","S","D"].map(d=>`<div class="cal-cab">${d}</div>`).join("");
+  for(let i=0;i<inicio;i++) html+=`<div></div>`;
+  let enMes=0;
+  for(let d=1;d<=dias;d++){
+    const f=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const ids=porDia[f];
+    if(ids) enMes++;
+    html+=`<div class="cal-dia ${ids?"entreno":""} ${f===hoy?"hoy":""}" ${ids?`onclick="abrirDetalle(${ids[0]})"`:""}>${d}</div>`;
+  }
+  $("cal-grid").innerHTML=html;
+  let racha=0, cursor=new Date();
+  if(!porDia[hoy]) cursor.setDate(cursor.getDate()-1);
+  for(;;){
+    const f=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(cursor.getDate()).padStart(2,"0");
+    if(porDia[f]){ racha++; cursor.setDate(cursor.getDate()-1); } else break;
+  }
+  $("cal-resumen").textContent=`${enMes} entrenamiento${enMes!==1?"s":""} este mes${racha>1?` · racha de ${racha} días`:""}`;
 }
 
 /* ---- historial ---- */
@@ -1111,7 +1463,7 @@ function pintarProgreso(){
   const lista=ejerciciosConDatos(), sel=$("sel-ej-progreso"), previo=sel.value;
   sel.innerHTML = lista.length? lista.map(e=>`<option value="${e.id}">${e.nombre}</option>`).join("") : `<option value="">Sin datos todavía</option>`;
   if(previo && lista.some(e=>e.id===previo)) sel.value=previo;
-  pintarProgresoEjercicio(); pintarTonelaje(); pintarSeriesMusculo(); pintarPRs();
+  pintarCalendario(); pintarProgresoEjercicio(); pintarTonelaje(); pintarSeriesMusculo(); pintarPRs();
 }
 function seriePorSesion(ejId){ // mejor e1RM de cada sesión
   const puntos=[];
@@ -1175,7 +1527,8 @@ function pintarSeriesMusculo(){
     if(en.id<corte) return;
     en.ejercicios.forEach(b=>{
       const n=b.series.filter(s=>s.tipo!=="C").length;
-      if(n){ const e=ej(b.ejId); cuenta[e.m]=(cuenta[e.m]||0)+n; (e.sec||[]).forEach(s=>cuenta[s]=(cuenta[s]||0)+n*0.5); }
+      if(n){ const e=ej(b.ejId), max=Math.max(...Object.values(e.act));
+        Object.entries(e.act).forEach(([m,w])=>cuenta[m]=(cuenta[m]||0)+n*(w/max)); }
     });
   });
   const filas=Object.entries(MUSCULOS).map(([k,n])=>({k,n,v:Math.round(cuenta[k]||0)})).filter(f=>f.v>0).sort((a,b)=>b.v-a.v);
@@ -1219,8 +1572,9 @@ function pintarBiblioteca(){
   const lista=filtrar(todosEjercicios(),$("buscar-ej").value,filtroM,filtroE);
   $("lista-biblioteca").innerHTML = lista.length? lista.map(e=>`
     <div class="item-lista" onclick="abrirEjDetalle('${e.id}')">
-      <div><div class="tit">${e.nombre}${e.custom?' <span class="chip acento">propio</span>':""}</div>
-      <div class="det">${MUSCULOS[e.m]} · ${EQUIPOS[e.eq]}</div></div><span class="muted">›</span></div>`).join("")
+      <div class="fila" style="min-width:0"><div class="picto">${pictoDe(e)}</div>
+      <div style="min-width:0"><div class="tit">${e.nombre}${e.custom?' <span class="chip acento">propio</span>':""}</div>
+      <div class="det">${MUSCULOS[e.m]} · ${EQUIPOS[e.eq]}</div></div></div><span class="muted">›</span></div>`).join("")
     : `<div class="vacio">Nada coincide con la búsqueda.</div>`;
 }
 function pintarSelector(){
@@ -1229,7 +1583,8 @@ function pintarSelector(){
   $("selector-lista").innerHTML = lista.map(e=>{
     const prev=ultimaSesionDe(e.id);
     return `<div class="item-lista" onclick="agregarEjercicioActivo('${e.id}')">
-      <div><div class="tit">${e.nombre}</div><div class="det">${MUSCULOS[e.m]} · ${EQUIPOS[e.eq]}${prev?` · últ.: ${prev.series.filter(s=>s.tipo!=="C").map(s=>fmtKg(s.peso)+"×"+s.reps).slice(0,3).join(", ")}`:""}</div></div>
+      <div class="fila" style="min-width:0"><div class="picto">${pictoDe(e)}</div>
+      <div style="min-width:0"><div class="tit">${e.nombre}</div><div class="det">${MUSCULOS[e.m]} · ${EQUIPOS[e.eq]}${prev?` · últ.: ${prev.series.filter(s=>s.tipo!=="C").map(s=>fmtKg(s.peso)+"×"+s.reps).slice(0,3).join(", ")}`:""}</div></div></div>
       <span class="chip acento">＋</span></div>`;
   }).join("") || `<div class="vacio">Nada coincide. Puedes crearlo en la pestaña Ejercicios.</div>`;
 }
@@ -1238,7 +1593,12 @@ function abrirEjDetalle(id){
   const e=ej(id), m=mejoresHistoricos(id), sesiones=seriePorSesion(id);
   $("ejd-titulo").textContent=e.nombre;
   $("ejd-sub").innerHTML=`${MUSCULOS[e.m]} · ${EQUIPOS[e.eq]} · descanso ${e.descanso||ESTADO.prefs.descanso}s`+
-    (e.sec&&e.sec.length?` · secundarios: ${e.sec.map(s=>MUSCULOS[s]).join(", ")}`:"")+(e.notas?`<br>📝 ${e.notas}`:"");
+    (e.notas?`<br>📝 ${e.notas}`:"");
+  const maxAct=Math.max(...Object.values(e.act));
+  $("ejd-visual").innerHTML =
+    (pictoDe(e)?`<div class="fila" style="justify-content:center;margin:.1rem 0 .5rem"><div class="picto picto-grande">${pictoDe(e)}</div></div>`:"")+
+    `<div class="act-lista">${Object.entries(e.act).sort((a,b)=>b[1]-a[1]).map(([m,w])=>`<span class="chip ${w===maxAct?"acento":""}">${MUSCULOS[m]} ${(w*100).toFixed(0)}%</span>`).join("")}</div>`+
+    mapaActivacionHTML(e.act);
   $("ejd-historial").innerHTML = sesiones.length?
     `<p class="peq" style="margin-bottom:.5rem">Mejor 1RM est.: <b class="num">${fmtKg(m.maxE)} kg</b> · mayor peso: <b class="num">${fmtKg(m.maxPeso)} kg</b></p>`+
     [...sesiones].reverse().slice(0,8).map(p=>`<div class="item-lista"><span class="muted peq">${fmtFecha(p.fecha)}</span><b class="num peq">${fmtKg(p.set.peso)}×${p.set.reps}${p.set.rpe?" @"+p.set.rpe:""} → ${fmtKg(p.e1)} kg</b></div>`).join("")
@@ -1280,7 +1640,17 @@ async function guardarNuevoEjercicio(){
   const nombre=$("ne-nombre").value.trim();
   if(!nombre) return toast("Ponle un nombre al ejercicio");
   const id = editandoId || "custom-"+Date.now();
-  const registro={ id, nombre, m:$("ne-musculo").value, sec:secSel.filter(s=>s!==$("ne-musculo").value),
+  const m=$("ne-musculo").value, sec=secSel.filter(s=>s!==m);
+  const actual = editandoId? ej(editandoId) : null;
+  let act;
+  if(actual && actual.m===m && JSON.stringify([...actual.sec].sort())===JSON.stringify([...sec].sort())){
+    act={...actual.act}; // músculos sin cambios: conservar la ponderación fina
+  } else {
+    act={[m]:1}; sec.forEach(s=>act[s]=.5);
+    const total=Object.values(act).reduce((a,b)=>a+b,0);
+    Object.keys(act).forEach(k=>act[k]=+(act[k]/total).toFixed(3));
+  }
+  const registro={ id, nombre, m, sec, act, patron: actual?actual.patron:null,
     eq:$("ne-equipo").value, descanso:+$("ne-descanso").value||null, notas:$("ne-notas").value.trim(),
     custom: !BIBLIOTECA.some(b=>b[0]===id) };
   await dbPut("ejercicios",registro);
@@ -1326,8 +1696,8 @@ function exportarCSV(){
   toast("CSV exportado");
 }
 function exportarJSON(){
-  const copia={version:1,exportado:new Date().toISOString(),entrenos:ESTADO.entrenos,
-    ejercicios:ESTADO.personalizados,rutinas:ESTADO.rutinas,prefs:ESTADO.prefs};
+  const copia={version:2,exportado:new Date().toISOString(),entrenos:ESTADO.entrenos,
+    ejercicios:ESTADO.personalizados,planes:ESTADO.planes,prefs:ESTADO.prefs};
   descargar("fuerza-backup-"+hoyISO()+".json",JSON.stringify(copia,null,1),"application/json");
   toast("Copia de seguridad exportada");
 }
@@ -1339,7 +1709,11 @@ async function importarJSON(ev){
     if(!confirm(`Importar ${datos.entrenos.length} entrenamientos. Se fusionarán con los actuales. ¿Continuar?`)) return;
     for(const en of datos.entrenos) await dbPut("entrenos",en);
     for(const e of (datos.ejercicios||[])) await dbPut("ejercicios",e);
-    if(datos.rutinas) { ESTADO.rutinas=datos.rutinas; await kvSet("rutinas",ESTADO.rutinas); }
+    if(datos.planes){ ESTADO.planes=datos.planes; await kvSet("planes",ESTADO.planes); }
+    else if(datos.rutinas && datos.rutinas.length){
+      ESTADO.planes.push({id:Date.now(),nombre:"Mis rutinas",rutinas:datos.rutinas});
+      await kvSet("planes",ESTADO.planes);
+    }
     if(datos.prefs) { ESTADO.prefs=datos.prefs; await kvSet("prefs",ESTADO.prefs); }
     await cargarTodo(); toast("Copia importada correctamente");
   }catch(e){ toast("El archivo no es una copia válida"); }
@@ -1361,7 +1735,12 @@ async function cargarTodo(){
   ESTADO.entrenos=(await dbAll("entrenos")).sort((a,b)=>a.id-b.id);
   ESTADO.personalizados=await dbAll("ejercicios");
   ESTADO.prefs={...ESTADO.prefs, ...(await kvGet("prefs")||{})};
-  ESTADO.rutinas=await kvGet("rutinas")||[];
+  ESTADO.planes=await kvGet("planes")||[];
+  const rutinasV1=await kvGet("rutinas");
+  if(rutinasV1 && rutinasV1.length && !ESTADO.planes.some(p=>p.nombre==="Mis rutinas")){
+    ESTADO.planes.push({id:Date.now(),nombre:"Mis rutinas",rutinas:rutinasV1});
+    await kvSet("planes",ESTADO.planes); await kvSet("rutinas",null);
+  }
   ESTADO.readiness=await kvGet("readiness");
   ESTADO.activo=await kvGet("activo");
   reconstruirMapa(); pintarAjustes(); pintarHoy();

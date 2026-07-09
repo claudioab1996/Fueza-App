@@ -1,4 +1,4 @@
-# Fuerza V1 — Guía de despliegue y uso
+# Fuerza V2 — Guía de despliegue y uso
 
 App personal de registro de entrenamiento de fuerza. Mismo patrón que la PWA de nutrición: local-first, sin cuentas, sin servidores, datos 100% tuyos.
 
@@ -6,7 +6,7 @@ App personal de registro de entrenamiento de fuerza. Mismo patrón que la PWA de
 
 | Archivo | Qué es |
 |---|---|
-| `index.html` | Toda la app (HTML + CSS + JS, ~78 KB) |
+| `index.html` | Toda la app (HTML + CSS + JS, ~128 KB) |
 | `sw.js` | Service worker → funcionamiento offline real |
 | `manifest.webmanifest` | Metadatos de la PWA |
 | `icon-180.png` / `icon-512.png` | Icono de la app |
@@ -23,7 +23,37 @@ A diferencia de la app de nutrición, aquí hay 5 archivos en vez de 1: el servi
 
 ⚠️ **Misma advertencia que la app de nutrición:** los datos viven en IndexedDB de Safari. Borrar historial de navegación, eliminar el icono o cambiar la URL de despliegue destruye los datos locales. **Exporta el JSON de respaldo con frecuencia** (Ajustes → Copia de seguridad completa).
 
-## Qué incluye la V1
+## Nuevo en la V2
+
+**Planes y rutinas desde cero**
+- Crea rutinas sin necesidad de entrenar primero: nombre, ejercicios, series×reps objetivo y peso opcional
+- Agrúpalas en planes (ej. "Rutina 2026") con desplegable, renombrado y edición completa
+- Superseries también dentro del editor de rutinas
+
+**Programas preestablecidos (8)**
+- Full Body 3 días (hipertrofia y fuerza 5×5), Torso/Pierna 4 días (hipertrofia y fuerza), Push/Pull/Legs 6 y 3 días, Powerbuilding 4 días e Híbrido 5 días
+- Plantillas genéricas basadas en principios con amplio respaldo: frecuencia 2x por músculo, 10–20 series semanales, sobrecarga progresiva
+- "Adoptar" copia el programa como plan tuyo, 100% editable
+
+**Ilustraciones y activación muscular**
+- 24 pictogramas de patrón de movimiento (empuje horizontal/inclinado/vertical, tracción vertical/horizontal, bisagra, sentadilla, etc.) visibles en biblioteca, selector y editor
+- Cada ejercicio muestra su mapa de activación: el cuerpo anatómico coloreado por predominancia (ej. remo con barra: dorsales 35%, espalda alta 28%, bíceps 15%, lumbares 12%…)
+- La espalda se dividió en **dorsales** y **espalda alta** (14 grupos musculares en total)
+
+**Biología más precisa**
+- La biblioteca creció a ~138 ejercicios (muchas más variantes de máquina: press convergente/Hammer en 3 ángulos, remos por agarre y altura, Smith, unilaterales…)
+- Cada ejercicio tiene activación ponderada por músculo, incluyendo impactos ligeros (el peso muerto reparte fatiga entre 7 grupos), y el mapa de recuperación y las series semanales por músculo usan esos pesos
+
+**Calendario de entrenamiento**
+- Vista mensual en Progreso: días entrenados marcados, toque para abrir el detalle, contador mensual y racha de días consecutivos
+
+**Cuerpo anatómico rediseñado**
+- Silueta orgánica con regiones musculares curvas (adiós rectángulos), usada en el mapa de frescura y en la activación por ejercicio
+
+**Migración automática desde V1**
+- Los datos existentes se migran solos al abrir: "espalda" → dorsales, ejercicios propios ganan mapa de activación, y las rutinas antiguas se agrupan en el plan "Mis rutinas". Las copias JSON de V1 también se importan sin problema.
+
+## Qué incluye desde la V1
 
 **Registro sin fricción**
 - Marcar una serie = 1 toque (los valores de la sesión anterior vienen precargados)
