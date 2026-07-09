@@ -93,7 +93,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 .leyenda b{font-variant-numeric:tabular-nums}
 
 /* ---------- entrenamiento activo ---------- */
-.encabezado-entreno{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.encabezado-entreno{display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:var(--alto-cab,52px);z-index:35;
+  background:rgba(13,14,17,.93);backdrop-filter:blur(10px);
+  margin:0 -1rem 1rem;padding:.55rem 1rem .6rem;border-bottom:1px solid var(--line)}
 .crono{font-size:1.6rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .bloque-ej{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:.9rem;overflow:hidden}
 .bloque-ej.ss-a{border-left:3px solid var(--accent)}
@@ -333,7 +336,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <input type="file" id="importar-json" accept=".json" style="display:none" onchange="importarJSON(event)">
       <button class="btn peligro" onclick="borrarTodo()">Borrar todos los datos</button>
     </div>
-    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza V2 · local y privado · sin cuentas ni servidores</p>
+    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza V2.1 · local y privado · sin cuentas ni servidores</p>
   </section>
 </main>
 
@@ -383,7 +386,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
   <div class="campo"><label>Músculos secundarios (opcional)</label><div id="ne-secundarios" class="filtros" style="flex-wrap:wrap"></div></div>
   <div class="grid2">
     <div class="campo"><label>Descanso (seg)</label><input type="number" id="ne-descanso" placeholder="90"></div>
-    <div class="campo"><label>&nbsp;</label><span></span></div>
+    <div class="campo"><label>Registro del peso</label>
+      <select id="ne-reg">
+        <option value="">Automático</option>
+        <option value="t">Peso total</option>
+        <option value="m">Por mancuerna</option>
+        <option value="u">Por lado (unilateral)</option>
+        <option value="c">Corporal (lastre)</option>
+      </select></div>
   </div>
   <div class="campo"><label>Notas técnicas</label><textarea id="ne-notas" rows="2" placeholder="Agarre, tempo, ajustes de máquina…"></textarea></div>
   <div class="grid2">
@@ -640,31 +650,242 @@ const BIBLIOTECA = [
 
 /* Pictogramas de patrón de movimiento */
 const PICTOS = {
- empuje_h: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="46" x2="50" y2="46" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="46" x2="14" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="46" x2="46" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="15" cy="41" r="3.6" fill="#F5A524"/><path d="M20 42 L36 42" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M36 42 L42 50 L48 50" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M24 41 L24 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="14" y1="26" x2="34" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="16" y1="21" x2="16" y2="31" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="32" y1="21" x2="32" y2="31" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- empuje_incl: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="54" x2="30" y2="30" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="24" y1="54" x2="30" y2="46" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="28" cy="29" r="3.6" fill="#F5A524"/><path d="M25 33 L14 46" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 46 L20 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M23 36 L34 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="28" y1="18" x2="42" y2="32" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="31" y1="14" x2="25" y2="21" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="45" y1="28" x2="39" y2="35" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- empuje_v: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="16" r="3.6" fill="#F5A524"/><path d="M32 20 L32 38 M32 38 L26 54 M32 38 L38 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 22 L25 10 M32 22 L39 10" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="18" y1="10" x2="46" y2="10" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="21" y1="5" x2="21" y2="15" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="43" y1="5" x2="43" y2="15" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- apertura: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="48" x2="50" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="48" x2="14" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="48" x2="46" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="17" cy="43" r="3.6" fill="#F5A524"/><path d="M22 44 L38 44 M38 44 L44 52 L50 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M27 43 Q20 32 13 30" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M27 43 Q34 30 41 28" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="29" r="2.5" fill="#565C66"/><circle cx="42" cy="27" r="2.5" fill="#565C66"/></svg>`,
- fondo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="16" y1="26" x2="16" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="48" y1="26" x2="48" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="12" y1="26" x2="20" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="44" y1="26" x2="52" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="14" r="3.6" fill="#F5A524"/><path d="M32 18 L32 36 M32 36 L28 46 L33 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 21 L18 26 M32 21 L46 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
- traccion_v: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="14" y1="9" x2="50" y2="9" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="20" r="3.6" fill="#F5A524"/><path d="M32 24 L32 42 M32 42 L27 52 M32 42 L37 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 25 L24 9 M32 25 L40 9" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
- traccion_h: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="47" cy="20" r="3.6" fill="#F5A524"/><path d="M44 23 L26 34 M26 34 L24 56 M26 34 L32 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M38 27 L40 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="32" y1="44" x2="48" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="34" y1="40" x2="34" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="40" x2="46" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- bisagra: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="45" cy="25" r="3.6" fill="#F5A524"/><path d="M42 28 L28 36 M28 36 L28 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M36 31 L38 50" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="30" y1="50" x2="46" y2="50" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="32" y1="45" x2="32" y2="55" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="44" y1="45" x2="44" y2="55" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- sentadilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="28" cy="17" r="3.6" fill="#F5A524"/><path d="M29 21 L27 36 M27 36 L40 40 M40 40 L36 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <line x1="16" y1="22" x2="42" y2="22" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="18" y1="17" x2="18" y2="27" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="40" y1="17" x2="40" y2="27" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- zancada: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="30" cy="13" r="3.6" fill="#F5A524"/><path d="M30 17 L30 34" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M30 34 L40 40 L40 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 34 L22 46 L14 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M30 22 L36 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="37" cy="34" r="2.5" fill="#565C66"/></svg>`,
- ext_rodilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="14" y1="30" x2="14" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="44" x2="32" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="17" cy="22" r="3.6" fill="#F5A524"/><path d="M18 26 L20 42 M20 42 L34 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M34 44 L46 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="48" cy="30" r="3" fill="#565C66"/></svg>`,
- flex_rodilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="44" x2="46" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="12" y1="44" x2="12" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="42" y1="44" x2="42" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="13" cy="38" r="3.6" fill="#F5A524"/><path d="M18 40 L36 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M36 40 L30 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="29" cy="24" r="3" fill="#565C66"/></svg>`,
- empuje_cadera: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="10" y1="34" x2="10" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="10" y1="34" x2="20" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="13" cy="28" r="3.6" fill="#F5A524"/><path d="M17 32 L32 34 M32 34 L40 46 L48 46 L48 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <line x1="24" y1="28" x2="40" y2="28" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="26" y1="23" x2="26" y2="33" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="38" y1="23" x2="38" y2="33" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- curl_codo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="12" r="3.6" fill="#F5A524"/><path d="M30 16 L30 38 M30 38 L26 56 M30 38 L36 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M30 22 L34 32 L42 24" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="38" y1="19" x2="48" y2="27" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- ext_codo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="44" y1="6" x2="44" y2="20" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="28" cy="14" r="3.6" fill="#F5A524"/><path d="M28 18 L28 40 M28 40 L24 56 M28 40 L34 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M28 24 L38 28 L44 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="38" y1="42" x2="50" y2="38" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- elev_lateral: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="14" r="3.6" fill="#F5A524"/><path d="M32 18 L32 40 M32 40 L27 56 M32 40 L37 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 24 L14 20 M32 24 L50 20" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="19" r="2.8" fill="#565C66"/><circle cx="52" cy="19" r="2.8" fill="#565C66"/></svg>`,
- elev_posterior: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="46" cy="20" r="3.6" fill="#F5A524"/><path d="M43 23 L28 32 M28 32 L26 44 M28 32 L34 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M36 27 L24 16" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M36 27 L44 38" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="22" cy="14" r="2.8" fill="#565C66"/><circle cx="46" cy="40" r="2.8" fill="#565C66"/></svg>`,
- encogimiento: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="13" r="3.6" fill="#F5A524"/><path d="M32 17 L32 38 M32 38 L27 56 M32 38 L37 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 21 L22 34 M32 21 L42 34" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="16" y1="34" x2="48" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <path d="M14 18 L14 12 M11 15 L14 12 L17 15" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M50 18 L50 12 M47 15 L50 12 L53 15" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- gemelo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="34" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="34" y1="56" x2="34" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="34" y1="48" x2="56" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="40" cy="10" r="3.6" fill="#F5A524"/><path d="M40 14 L40 30 M40 30 L40 42" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M40 42 L46 46 M46 46 L46 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
- core_flex: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="52" x2="56" y2="52" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="17" cy="38" r="3.6" fill="#F5A524"/><path d="M21 41 Q28 44 32 46 M32 46 L40 36 L44 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M24 40 Q28 34 33 36" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
- core_iso: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="54" x2="56" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="15" cy="36" r="3.6" fill="#F5A524"/><path d="M19 39 L44 44 L52 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 40 L18 54 L24 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
- carga: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="12" r="3.6" fill="#F5A524"/><path d="M32 16 L32 36 M32 36 L26 48 L24 56 M32 36 L40 46 L42 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 20 L22 38 M32 20 L42 38" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="18" y="38" width="8" height="5" rx="1.5" fill="#565C66"/><rect x="38" y="38" width="8" height="5" rx="1.5" fill="#565C66"/></svg>`,
- muneca: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="42" x2="40" y2="42" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="16" y1="42" x2="16" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="36" y1="42" x2="36" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <path d="M18 40 L38 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M38 40 L46 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="42" y1="26" x2="50" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
- abduccion: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="20" y1="30" x2="44" y2="30" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="24" y1="30" x2="24" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="40" y1="30" x2="40" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/> <circle cx="32" cy="12" r="3.6" fill="#F5A524"/><path d="M32 16 L32 30" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M32 30 L20 44 L18 54 M32 30 L44 44 L46 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/> <path d="M16 38 L11 34 M48 38 L53 34" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ empuje_h: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="46" x2="50" y2="46" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="46" x2="14" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="46" x2="46" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="15" cy="41" r="3.6" fill="#F5A524"/><path d="M20 42 L36 42" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M36 42 L42 50 L48 50" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M24 41 L24 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="14" y1="26" x2="34" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="16" y1="21" x2="16" y2="31" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="32" y1="21" x2="32" y2="31" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ empuje_incl: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="52" x2="32" y2="30" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="21" y1="56" x2="21" y2="43" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="33" y1="56" x2="29" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="33" cy="27" r="3.6" fill="#F5A524"/><path d="M30 31 L17 45 M17 45 L27 50 L27 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M25 37 L38 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<line x1="33" y1="19" x2="45" y2="31" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="38" y1="15" x2="31" y2="22" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="48" y1="27" x2="41" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ empuje_v: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="16" r="3.6" fill="#F5A524"/><path d="M32 20 L32 38 M32 38 L26 54 M32 38 L38 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M32 22 L25 10 M32 22 L39 10" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="18" y1="10" x2="46" y2="10" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="21" y1="5" x2="21" y2="15" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="43" y1="5" x2="43" y2="15" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ apertura: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="48" x2="50" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="48" x2="14" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="48" x2="46" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="17" cy="43" r="3.6" fill="#F5A524"/><path d="M22 44 L38 44 M38 44 L44 52 L50 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M27 43 Q20 32 13 30" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M27 43 Q34 30 41 28" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="29" r="2.5" fill="#565C66"/><circle cx="42" cy="27" r="2.5" fill="#565C66"/></svg>`,
+ fondo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="16" y1="26" x2="16" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="48" y1="26" x2="48" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="12" y1="26" x2="20" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="44" y1="26" x2="52" y2="26" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="32" cy="14" r="3.6" fill="#F5A524"/><path d="M32 18 L32 36 M32 36 L28 46 L33 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M32 21 L18 26 M32 21 L46 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ traccion_v: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="14" y1="9" x2="50" y2="9" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="32" cy="20" r="3.6" fill="#F5A524"/><path d="M32 24 L32 42 M32 42 L27 52 M32 42 L37 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M32 25 L24 9 M32 25 L40 9" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ traccion_h: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="47" cy="20" r="3.6" fill="#F5A524"/><path d="M44 23 L26 34 M26 34 L24 56 M26 34 L32 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M38 27 L40 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="32" y1="44" x2="48" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="34" y1="40" x2="34" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="46" y1="40" x2="46" y2="48" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ bisagra: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="45" cy="25" r="3.6" fill="#F5A524"/><path d="M42 28 L28 36 M28 36 L28 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M36 31 L38 50" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="30" y1="50" x2="46" y2="50" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="32" y1="45" x2="32" y2="55" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="44" y1="45" x2="44" y2="55" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ sentadilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="27" cy="15" r="3.6" fill="#F5A524"/><path d="M28 19 L25 34 M25 34 L39 38 M39 38 L36 54 M36 54 L44 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M28 22 L36 21" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<line x1="14" y1="20" x2="42" y2="20" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="16" y1="15" x2="16" y2="25" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="40" y1="15" x2="40" y2="25" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ zancada: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="30" cy="13" r="3.6" fill="#F5A524"/><path d="M30 17 L30 34" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M30 34 L40 40 L40 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 34 L22 46 L14 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M30 22 L36 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="37" cy="34" r="2.5" fill="#565C66"/></svg>`,
+ ext_rodilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="14" y1="30" x2="14" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="14" y1="44" x2="32" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="17" cy="22" r="3.6" fill="#F5A524"/><path d="M18 26 L20 42 M20 42 L34 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M34 44 L46 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="48" cy="30" r="3" fill="#565C66"/></svg>`,
+ flex_rodilla: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="44" x2="46" y2="44" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="12" y1="44" x2="12" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="42" y1="44" x2="42" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="13" cy="38" r="3.6" fill="#F5A524"/><path d="M18 40 L36 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M36 40 L30 26" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="29" cy="24" r="3" fill="#565C66"/></svg>`,
+ empuje_cadera: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="10" y1="34" x2="10" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="10" y1="34" x2="20" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="13" cy="28" r="3.6" fill="#F5A524"/><path d="M17 32 L32 34 M32 34 L40 46 L48 46 L48 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<line x1="24" y1="28" x2="40" y2="28" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="26" y1="23" x2="26" y2="33" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="38" y1="23" x2="38" y2="33" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ curl_codo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="12" r="3.6" fill="#F5A524"/><path d="M30 16 L30 38 M30 38 L26 56 M30 38 L36 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M30 22 L34 32 L42 24" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="38" y1="19" x2="48" y2="27" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ ext_codo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="44" y1="6" x2="44" y2="20" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="28" cy="14" r="3.6" fill="#F5A524"/><path d="M28 18 L28 40 M28 40 L24 56 M28 40 L34 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M28 24 L38 28 L44 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="38" y1="42" x2="50" y2="38" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ elev_lateral: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="14" r="3.6" fill="#F5A524"/><path d="M32 18 L32 40 M32 40 L27 56 M32 40 L37 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M32 24 L14 20 M32 24 L50 20" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="19" r="2.8" fill="#565C66"/><circle cx="52" cy="19" r="2.8" fill="#565C66"/></svg>`,
+ elev_posterior: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="46" cy="20" r="3.6" fill="#F5A524"/><path d="M43 23 L28 32 M28 32 L26 44 M28 32 L34 44" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M36 27 L24 16" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M36 27 L44 38" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="22" cy="14" r="2.8" fill="#565C66"/><circle cx="46" cy="40" r="2.8" fill="#565C66"/></svg>`,
+ encogimiento: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="13" r="3.6" fill="#F5A524"/><path d="M32 17 L32 38 M32 38 L27 56 M32 38 L37 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M32 21 L22 34 M32 21 L42 34" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="16" y1="34" x2="48" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<path d="M14 18 L14 12 M11 15 L14 12 L17 15" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M50 18 L50 12 M47 15 L50 12 L53 15" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ gemelo: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="30" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="30" y1="56" x2="30" y2="49" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="30" y1="49" x2="56" y2="49" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="36" cy="9" r="3.6" fill="#F5A524"/><path d="M36 13 L36 30 M36 30 L36 42" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M36 42 L32 48 M36 42 L42 45" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M49 44 L49 35 M46 38 L49 35 L52 38" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ core_flex: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="52" x2="56" y2="52" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="19" cy="35" r="3.6" fill="#F5A524"/><path d="M22 38 Q30 45 37 47 M37 47 L45 37 M45 37 L49 52" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M23 39 L28 33" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ core_iso: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="54" x2="56" y2="54" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="15" cy="36" r="3.6" fill="#F5A524"/><path d="M19 39 L44 44 L52 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 40 L18 54 L24 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+ carga: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="56" x2="56" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="32" cy="12" r="3.6" fill="#F5A524"/><path d="M32 16 L32 36 M32 36 L26 48 L24 56 M32 36 L40 46 L42 56" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M32 20 L22 38 M32 20 L42 38" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="18" y="38" width="8" height="5" rx="1.5" fill="#565C66"/><rect x="38" y="38" width="8" height="5" rx="1.5" fill="#565C66"/></svg>`,
+ muneca: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="42" x2="40" y2="42" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="16" y1="42" x2="16" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="36" y1="42" x2="36" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<path d="M18 40 L38 40" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M38 40 L46 32" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="42" y1="26" x2="50" y2="34" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
+ abduccion: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><line x1="20" y1="30" x2="44" y2="30" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="24" y1="30" x2="24" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="40" y1="30" x2="40" y2="56" stroke="#565C66" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<circle cx="32" cy="12" r="3.6" fill="#F5A524"/><path d="M32 16 L32 30" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M32 30 L20 44 L18 54 M32 30 L44 44 L46 54" stroke="#F5A524" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M16 38 L11 34 M48 38 L53 34" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`,
 };
+
+/* Descripción breve de ejecución por ejercicio */
+const COMO = {
+"press-banca":"Tumbado, escápulas retraídas y pies firmes. Baja la barra al pecho medio con control y empuja hasta extender los codos.",
+"press-inclinado-barra":"Banco a 30-45°. Baja la barra a la parte alta del pecho y empuja en línea recta sin rebotar.",
+"press-declinado-barra":"Banco declinado. Baja al pecho bajo y empuja; el recorrido es más corto que en el plano.",
+"press-plano-manc":"Mancuernas a los lados del pecho, codos a ~45° del torso. Empuja hasta juntarlas arriba sin chocar.",
+"press-inclinado-manc":"Banco a 30-45°. Baja las mancuernas al pecho alto y empuja juntándolas ligeramente arriba.",
+"press-smith-plano":"La barra guiada permite concentrarte en empujar. Ajusta el banco para que la barra toque el pecho medio.",
+"press-smith-inclinado":"Banco inclinado bajo la barra guiada, que debe bajar al pecho alto.",
+"press-convergente-plano":"Ajusta el asiento para que las manijas queden a la altura del pecho medio. Empuja hasta casi extender.",
+"press-convergente-inclinado":"Asiento ajustado para empujar hacia arriba-adelante. Los brazos convergen al frente.",
+"press-convergente-declinado":"Manijas a la altura del pecho bajo; empuje hacia abajo-adelante.",
+"press-maquina":"Espalda apoyada, manijas a la altura del pecho. Empuja sin bloquear los codos con violencia.",
+"aperturas-manc":"Codos semiflexionados fijos. Abre los brazos en arco hasta sentir el estiramiento y cierra como abrazando.",
+"aperturas-inclinadas":"Igual que las planas pero en banco a 30°; enfatiza el pecho superior.",
+"pec-deck":"Antebrazos o manos en las almohadillas. Junta al frente apretando el pecho 1 segundo.",
+"cruces-polea-alta":"Poleas arriba. Baja y junta las manos frente a la cadera en arco; pecho inferior.",
+"cruces-polea-media":"Poleas a la altura del hombro. Junta las manos al frente del pecho.",
+"cruces-polea-baja":"Poleas abajo. Sube y junta las manos frente a la cara; pecho superior.",
+"flexiones":"Cuerpo en línea, manos algo más anchas que los hombros. Baja el pecho al suelo y empuja.",
+"flexiones-lastradas":"Igual que las flexiones, con disco en la espalda o chaleco. Registra solo el lastre.",
+"fondos-pecho":"En paralelas, inclina el torso adelante y codos abiertos. Baja profundo y empuja.",
+"banda-press":"Banda tras la espalda o anclada. Empuja al frente como en un press.",
+"dominadas":"Agarre prono algo más ancho que los hombros. Sube hasta pasar la barbilla y baja con control.",
+"dominadas-supinas":"Agarre supino al ancho de hombros; mayor implicación del bíceps.",
+"dominadas-neutras":"Agarre neutro (palmas enfrentadas); cómodo para hombros y codos.",
+"dominadas-asistidas":"La rodilla o pies en la plataforma restan peso. Registra el contrapeso seleccionado.",
+"jalon-pecho":"Lleva la barra a la parte alta del pecho sacando pecho, sin balancear el torso.",
+"jalon-ancho":"Agarre bien abierto; el codo baja pegado al costado. Rango algo más corto.",
+"jalon-cerrado":"Maneral en V o agarre cerrado; permite más recorrido y estiramiento del dorsal.",
+"jalon-supino":"Palmas hacia ti al ancho de hombros; el bíceps trabaja más.",
+"jalon-unilateral":"Una mano por serie. Lleva el codo a la cadera y controla la rotación del torso.",
+"remo-barra":"Torso inclinado ~45°, espalda neutra. Lleva la barra al abdomen bajo y baja con control.",
+"remo-pendlay":"Torso casi paralelo al suelo; la barra descansa en el suelo entre repeticiones. Tirón explosivo.",
+"remo-manc":"Una rodilla y mano en el banco. Lleva la mancuerna a la cadera sin rotar el torso.",
+"remo-cable":"Sentado, torso vertical. Lleva el maneral al abdomen juntando escápulas.",
+"remo-cable-ancho":"Barra ancha a la altura del pecho bajo; codos abiertos. Espalda alta.",
+"remo-alto-polea":"Tira del maneral hacia la cara/cuello con codos altos y abiertos.",
+"remo-t":"Pecho sobre el apoyo o a horcajadas de la barra. Tira hacia el pecho con codos cerrados.",
+"remo-maquina":"Pecho apoyado en la almohadilla elimina el impulso. Tira con los codos hacia atrás.",
+"remo-sello":"Tumbado boca abajo en banco alto; solo tiran los brazos y la espalda, sin trampa posible.",
+"remo-convergente-bajo":"Manijas bajas: el codo viaja pegado al costado. Predomina el dorsal.",
+"remo-convergente-alto":"Manijas altas: el codo viaja abierto. Predomina la espalda alta.",
+"pullover-cable":"De pie ante la polea alta, brazos casi rectos. Baja la barra hasta los muslos en arco.",
+"pullover-maquina":"Codos en las almohadillas. Empuja en arco hacia abajo con los dorsales.",
+"peso-muerto":"Barra pegada a la tibia, espalda neutra. Empuja el suelo y extiende cadera y rodillas a la vez.",
+"rack-pull":"Peso muerto parcial desde soportes a la altura de la rodilla. Permite más carga.",
+"banda-remo":"Banda anclada al frente. Tira de los extremos hacia el abdomen juntando escápulas.",
+"banda-jalon":"Banda anclada arriba. Tira hacia el pecho como en un jalón.",
+"press-militar":"De pie, glúteos y abdomen firmes. Empuja la barra sobre la cabeza y métela bajo la barra al final.",
+"press-militar-sentado":"Con respaldo. Baja la barra a la barbilla/clavícula y empuja vertical.",
+"press-manc-sentado":"Mancuernas a la altura de las orejas, codos bajo las muñecas. Empuja hasta casi juntarlas.",
+"press-arnold":"Empieza con palmas hacia ti y rota mientras empujas hasta terminar palmas al frente.",
+"press-smith-hombro":"Banco vertical bajo la barra guiada; baja a la barbilla.",
+"press-maquina-hombro":"Espalda apoyada, empuja las manijas sobre la cabeza sin bloquear brusco.",
+"elev-laterales":"Codos semiflexionados. Sube en arco hasta la altura del hombro, como sirviendo agua.",
+"elev-laterales-cable":"La polea baja mantiene tensión constante; sube hasta la horizontal.",
+"elev-laterales-maquina":"Brazos bajo las almohadillas; sube hasta la horizontal sin encoger hombros.",
+"elev-frontales":"Sube las mancuernas al frente hasta la altura del hombro, sin balanceo.",
+"pajaros":"Torso inclinado, abre los brazos en arco hacia atrás apretando el deltoide posterior.",
+"reverse-pec-deck":"De cara a la máquina, abre los brazos hacia atrás hasta la línea del torso.",
+"face-pull":"Cuerda en polea alta. Tira hacia la cara separando las manos, codos altos.",
+"remo-menton":"Sube la barra pegada al cuerpo hasta el pecho, codos por encima de las manos. No pases del pecho si molesta el hombro.",
+"curl-barra":"Codos pegados al torso, sin balancear. Sube la barra y baja en 2-3 segundos.",
+"curl-barra-z":"La barra Z alivia las muñecas; misma ejecución que el curl recto.",
+"curl-alterno":"Alterna brazos supinando la muñeca al subir (el meñique gira hacia fuera).",
+"curl-martillo":"Palmas enfrentadas todo el recorrido; trabaja braquial y antebrazo.",
+"curl-inclinado":"Banco a 45-60°, brazos colgando atrás. Gran estiramiento del bíceps; no subas los codos.",
+"curl-predicador":"Brazos sobre el pupitre; extiende casi por completo abajo y no despegues los codos.",
+"curl-maquina":"Codos alineados con el eje de giro. Sube, aprieta 1 segundo y baja lento.",
+"curl-cable":"Polea baja; tensión constante. Codos fijos al costado.",
+"curl-bayesian":"De espaldas a la polea baja, brazo por detrás del cuerpo: máximo estiramiento.",
+"curl-concentrado":"Sentado, codo apoyado en el muslo interno. Un brazo por serie, sin impulso.",
+"curl-arana":"Pecho apoyado en banco inclinado, brazos verticales colgando. Cero impulso posible.",
+"press-frances":"Tumbado, baja la barra a la frente flexionando solo los codos y extiende.",
+"ext-cable-barra":"Codos pegados al torso. Extiende hasta abajo y controla la subida.",
+"ext-cable-cuerda":"Con cuerda, separa las manos al final de la extensión para apretar más.",
+"ext-sobre-cabeza":"Mancuerna a dos manos tras la nuca; extiende sobre la cabeza. Estira la cabeza larga.",
+"ext-sobre-cabeza-cable":"De espaldas a la polea baja, extiende sobre la cabeza con cuerda.",
+"ext-unilateral-cable":"Un brazo por serie; permite corregir desequilibrios.",
+"fondos-triceps":"En paralelas con torso vertical y codos pegados; baja hasta 90° y empuja.",
+"fondos-maquina":"Empuja las manijas hacia abajo hasta extender los codos, torso erguido.",
+"fondos-banco":"Manos en el banco tras la espalda, pies al frente. Baja flexionando codos.",
+"press-cerrado":"Press de banca con manos al ancho de hombros y codos cerrados.",
+"patada-triceps":"Torso inclinado, brazo paralelo al suelo. Extiende el codo hacia atrás. Un brazo por serie.",
+"curl-muneca":"Antebrazos apoyados, palmas arriba. Solo la muñeca sube y baja.",
+"curl-invertido":"Curl con agarre prono (palmas abajo); castiga el antebrazo.",
+"paseo-granjero":"Camina erguido con peso pesado en cada mano. Registra el peso de una mano; reps = metros o segundos.",
+"crunch":"Despega solo la parte alta de la espalda enrollando el torso; la lumbar queda en el suelo.",
+"crunch-cable":"De rodillas ante la polea alta, cuerda junto a la cabeza. Enrolla el torso hacia abajo.",
+"crunch-maquina":"Ajusta el asiento y enrolla el torso contra la resistencia.",
+"elev-piernas":"Colgado de la barra, sube las piernas (o rodillas) inclinando la pelvis al final.",
+"elev-piernas-tumbado":"Tumbado, sube las piernas rectas y baja sin arquear la lumbar. Reps.",
+"plancha":"Antebrazos y puntas de pies, cuerpo en línea. Aprieta glúteo y abdomen. Registra segundos en reps.",
+"plancha-lateral":"De lado sobre un antebrazo, cadera arriba. Segundos por lado.",
+"rueda-abdominal":"De rodillas, rueda al frente hasta donde controles sin arquear la lumbar y regresa.",
+"russian-twist":"Sentado con torso atrás, gira el tronco de lado a lado. Reps por giro.",
+"press-pallof":"De lado a la polea, extiende los brazos al frente resistiendo la rotación. Segundos o reps por lado.",
+"sentadilla":"Barra en la espalda alta. Baja rompiendo cadera y rodilla a la vez, hasta el paralelo o más.",
+"sentadilla-frontal":"Barra sobre las clavículas, codos altos. El torso queda más vertical.",
+"sentadilla-goblet":"Mancuerna vertical contra el pecho. Sentadilla profunda con torso erguido.",
+"sentadilla-smith":"Pies un paso al frente de la barra guiada; permite aislar más la pierna.",
+"sentadilla-pendulo":"Sigue el arco de la máquina; profunda y estable, castiga el cuádriceps.",
+"prensa":"Pies al ancho de hombros en la plataforma. Baja hasta ~90° sin despegar la cadera del asiento.",
+"prensa-unilateral":"Una pierna por serie, pie centrado en la plataforma.",
+"hack-squat":"Espalda contra el respaldo, pies algo adelantados. Baja profundo.",
+"extensiones-cuad":"Extiende las rodillas hasta arriba, aprieta 1 segundo y baja lento.",
+"extension-unilateral":"Una pierna por serie; iguala fuerzas entre piernas.",
+"zancadas":"Paso largo al frente, rodilla trasera casi al suelo. Alterna piernas; peso por mano.",
+"zancadas-barra":"Igual con barra en la espalda; exige más equilibrio.",
+"bulgara":"Pie trasero en el banco. Baja vertical con la pierna delantera. Series por pierna; peso por mano.",
+"step-up":"Sube al cajón empujando con la pierna de arriba, sin impulsarte con la de abajo. Por pierna.",
+"sissy-squat":"Rodillas al frente y torso atrás en línea con el muslo. Solo cuádriceps; usa apoyo.",
+"aduccion-maquina":"Junta las piernas contra la resistencia; controla la apertura.",
+"kb-goblet":"Kettlebell contra el pecho; sentadilla profunda con torso erguido.",
+"peso-muerto-rumano":"Desde arriba, empuja la cadera atrás con rodillas semiflexionadas hasta sentir los isquios; espalda neutra.",
+"rumano-manc":"Igual con mancuernas pegadas a las piernas todo el recorrido.",
+"piernas-rigidas":"Como el rumano pero con rodillas casi extendidas; más estiramiento. No redondees la espalda.",
+"curl-femoral-tumbado":"Boca abajo, lleva los talones al glúteo y baja lento.",
+"curl-femoral-sentado":"Sentado, flexiona las rodillas contra el rodillo; mayor estiramiento que tumbado.",
+"curl-femoral-unilateral":"Una pierna por serie.",
+"curl-femoral-de-pie":"De pie, flexiona una rodilla contra el rodillo. Por pierna.",
+"buenos-dias":"Barra en la espalda, empuja la cadera atrás inclinando el torso con espalda neutra. Carga conservadora.",
+"nordic-curl":"Tobillos sujetos, baja el torso recto frenando con los isquios. Ayúdate con las manos al subir.",
+"hip-thrust":"Espalda alta en el banco, barra en la cadera. Extiende la cadera hasta la horizontal apretando el glúteo.",
+"hip-thrust-maquina":"Misma ejecución con la comodidad y estabilidad de la máquina.",
+"puente-gluteo":"Tumbado, empuja la cadera al techo apretando el glúteo arriba.",
+"patada-gluteo-cable":"Tobillera en la polea baja. Patada atrás con pierna casi recta. Por pierna.",
+"abduccion-maquina":"Abre las piernas contra la resistencia; controla el cierre.",
+"kb-swing":"Bisagra de cadera explosiva: la kettlebell sube por el impulso de la cadera, no de los brazos.",
+"gemelos-pie":"Sube a la punta de los pies con rango completo, pausa arriba y estira abajo.",
+"gemelos-sentado":"Con rodilla flexionada trabaja el sóleo. Sube y baja lento con pausa.",
+"gemelos-prensa":"Puntas de pies en el borde de la plataforma de la prensa; rango completo.",
+"gemelos-smith":"De pie bajo la barra guiada, puntas sobre un disco o escalón.",
+"encogimientos-barra":"Sube los hombros hacia las orejas en vertical, pausa arriba. Sin girar los hombros.",
+"encogimientos-manc":"Igual con mancuernas a los costados; recorrido más libre.",
+"encogimientos-maquina":"En la máquina o multipower; permite cargar más con agarre cómodo.",
+"hiperextensiones":"Cadera en la almohadilla. Baja el torso y sube hasta la línea del cuerpo, sin hiperextender.",
+"extension-espalda-maquina":"Extiende el torso contra el rodillo con rango controlado.",
+"superman":"Boca abajo, eleva brazos y piernas a la vez y mantén 1-2 segundos. Reps.",
+};
+
+/* Ejercicios que se registran por lado (una mano / una pierna por serie) */
+const UNILATERALES = new Set(["remo-manc","jalon-unilateral","prensa-unilateral","extension-unilateral",
+"curl-femoral-unilateral","curl-femoral-de-pie","ext-unilateral-cable","curl-concentrado","patada-triceps",
+"patada-gluteo-cable","bulgara","step-up","plancha-lateral","press-pallof"]);
+
+/* Cómo se registra el peso: t=total, m=por mancuerna, u=por lado, c=corporal (lastre) */
+function regDe(e){
+  if(e.reg) return e.reg;
+  if(UNILATERALES.has(e.id)) return "u";
+  if(e.eq==="mancuernas"||e.eq==="kettlebell") return "m";
+  if(e.eq==="corporal") return "c";
+  return "t";
+}
+const REG_TXT = {
+  t:"Registra el peso total (barra con discos incluidos, o la placa de la máquina).",
+  m:"Registra el peso de UNA mancuerna/kettlebell (ej.: dos de 20 kg → escribe 20).",
+  u:"Unilateral: haz las series con cada lado y registra el peso de un lado.",
+  c:"Peso corporal: registra solo el lastre añadido (0 si no usas lastre; en asistidas, el contrapeso)."
+};
+const REG_CORTO = { t:"", m:"kg por mancuerna", u:"por lado", c:"kg = lastre" };
+
 
 /* Cuerpo anatómico (frente/espalda) */
 const SVG_FRENTE = `<svg viewBox="0 0 140 260" xmlns="http://www.w3.org/2000/svg"> <path fill="#1D2026" d="M70 3 C60 3 55 10 55 18 C55 24 57 28 60 31 C50 34 40 37 36 42 C30 49 28 60 27 72 C26 84 24 98 23 108 C22 116 25 119 29 118 C33 117 35 112 36 105 C38 94 40 82 42 74 C43 84 43 96 43 106 C43 122 46 136 47 152 C48 170 47 186 48 200 C49 220 52 238 56 248 C58 253 66 253 66 247 C66 236 64 220 64 204 C64 188 66 172 68 160 L72 160 C74 172 76 188 76 204 C76 220 74 236 74 247 C74 253 82 253 84 248 C88 238 91 220 92 200 C93 186 92 170 93 152 C94 136 97 122 97 106 C97 96 97 84 98 74 C100 82 102 94 104 105 C105 112 107 117 111 118 C115 119 118 116 117 108 C116 98 114 84 113 72 C112 60 110 49 104 42 C100 37 90 34 80 31 C83 28 85 24 85 18 C85 10 80 3 70 3 Z"/> <path class="musc" data-m="trapecio" d="M58 32 Q64 35 68 36 L68 41 Q60 40 53 42 Q55 36 58 32 Z"/><path class="musc" data-m="trapecio" d="M 82.0 32.0 Q 76.0 35.0 72.0 36.0 L 72.0 41.0 Q 80.0 40.0 87.0 42.0 Q 85.0 36.0 82.0 32.0 Z"/> <path class="musc" data-m="hombros" d="M52 43 Q42 44 38 51 Q36 58 39 63 Q46 64 51 60 Q54 51 52 43 Z"/><path class="musc" data-m="hombros" d="M 88.0 43.0 Q 98.0 44.0 102.0 51.0 Q 104.0 58.0 101.0 63.0 Q 94.0 64.0 89.0 60.0 Q 86.0 51.0 88.0 43.0 Z"/> <path class="musc" data-m="pecho" d="M54 44 Q66 42 68 46 L68 68 Q60 74 52 68 Q48 55 54 44 Z"/><path class="musc" data-m="pecho" d="M 86.0 44.0 Q 74.0 42.0 72.0 46.0 L 72.0 68.0 Q 80.0 74.0 88.0 68.0 Q 92.0 55.0 86.0 44.0 Z"/> <path class="musc" data-m="biceps" d="M40 66 Q36 68 35 76 Q34 86 36 93 Q40 96 44 93 Q46 84 45 74 Q44 68 40 66 Z"/><path class="musc" data-m="biceps" d="M 100.0 66.0 Q 104.0 68.0 105.0 76.0 Q 106.0 86.0 104.0 93.0 Q 100.0 96.0 96.0 93.0 Q 94.0 84.0 95.0 74.0 Q 96.0 68.0 100.0 66.0 Z"/> <path class="musc" data-m="antebrazos" d="M35 96 Q33 104 31 112 Q30 118 32 121 Q35 123 37 120 Q40 112 41 103 Q41 97 39 95 Q36 94 35 96 Z"/><path class="musc" data-m="antebrazos" d="M 105.0 96.0 Q 107.0 104.0 109.0 112.0 Q 110.0 118.0 108.0 121.0 Q 105.0 123.0 103.0 120.0 Q 100.0 112.0 99.0 103.0 Q 99.0 97.0 101.0 95.0 Q 104.0 94.0 105.0 96.0 Z"/> <path class="musc" data-m="abdomen" d="M56 72 Q66 76 68 76 L68 112 Q62 118 57 114 Q53 94 56 72 Z"/><path class="musc" data-m="abdomen" d="M 84.0 72.0 Q 74.0 76.0 72.0 76.0 L 72.0 112.0 Q 78.0 118.0 83.0 114.0 Q 87.0 94.0 84.0 72.0 Z"/> <path class="musc" data-m="cuadriceps" d="M48 122 Q45 140 47 158 Q49 172 54 176 Q60 176 63 170 Q66 150 65 130 Q64 120 58 118 Q51 118 48 122 Z"/><path class="musc" data-m="cuadriceps" d="M 92.0 122.0 Q 95.0 140.0 93.0 158.0 Q 91.0 172.0 86.0 176.0 Q 80.0 176.0 77.0 170.0 Q 74.0 150.0 75.0 130.0 Q 76.0 120.0 82.0 118.0 Q 89.0 118.0 92.0 122.0 Z"/> <path fill="#1D2026" d="M52 180 Q50 186 52 192 Q56 195 60 192 Q62 186 60 180 Q56 177 52 180 Z"/><path fill="#1D2026" d="M 88.0 180.0 Q 90.0 186.0 88.0 192.0 Q 84.0 195.0 80.0 192.0 Q 78.0 186.0 80.0 180.0 Q 84.0 177.0 88.0 180.0 Z"/> <path class="musc" data-m="gemelos" d="M52 196 Q49 208 51 224 Q53 232 57 232 Q61 230 62 220 Q63 206 61 197 Q56 193 52 196 Z"/><path class="musc" data-m="gemelos" d="M 88.0 196.0 Q 91.0 208.0 89.0 224.0 Q 87.0 232.0 83.0 232.0 Q 79.0 230.0 78.0 220.0 Q 77.0 206.0 79.0 197.0 Q 84.0 193.0 88.0 196.0 Z"/> <text x="70" y="257" text-anchor="middle" font-size="9" fill="#565c66" font-family="sans-serif">FRENTE</text> </svg>`;
@@ -786,7 +1007,7 @@ function normalizarEj(e){
 function reconstruirMapa(){
   mapaEjercicios = new Map();
   BIBLIOTECA.forEach(([id,nombre,eq,descanso,patron,act])=>
-    mapaEjercicios.set(id, normalizarEj({id,nombre,eq,descanso,patron,act:{...act},notas:"",custom:false})));
+    mapaEjercicios.set(id, normalizarEj({id,nombre,eq,descanso,patron,act:{...act},como:COMO[id]||"",notas:"",custom:false})));
   ESTADO.personalizados.forEach(e=>{
     const base=mapaEjercicios.get(e.id);
     mapaEjercicios.set(e.id, normalizarEj({...(base||{}), ...e}));
@@ -1040,7 +1261,7 @@ function pintarBloques(){
     }
     div.innerHTML = `
       <header>
-        <div><h3>${e.nombre}</h3><div class="sub">${MUSCULOS[e.m]||""} · ${EQUIPOS[e.eq]||""}${b.ss?` · <b style="color:var(--accent)">Superserie ${b.ss}</b>`:""}</div></div>
+        <div><h3>${e.nombre}</h3><div class="sub">${MUSCULOS[e.m]||""} · ${EQUIPOS[e.eq]||""}${REG_CORTO[regDe(e)]?` · <b style="color:var(--accent)">${REG_CORTO[regDe(e)]}</b>`:""}${b.ss?` · <b style="color:var(--accent)">Superserie ${b.ss}</b>`:""}</div></div>
         <div style="display:flex;gap:.3rem">
           ${bi>0?`<button class="btn mini fantasma" title="Enlazar en superserie con el anterior" onclick="alternarSS(${bi})">⛓</button>`:""}
           ${e.eq==="barra"?`<button class="btn mini fantasma" title="Calculadora de discos" onclick="abrirDiscos(${bi})">◎</button>`:""}
@@ -1086,7 +1307,9 @@ async function agregarEjercicioActivo(id){
 }
 async function quitarEjercicio(bi){
   if(!confirm("¿Quitar este ejercicio del entrenamiento?")) return;
-  ESTADO.activo.ejercicios.splice(bi,1); await guardarActivo(); pintarBloques();
+  ESTADO.activo.ejercicios.splice(bi,1);
+  limpiarSSHuerfanas(ESTADO.activo.ejercicios);
+  await guardarActivo(); pintarBloques();
 }
 async function agregarSerie(bi){
   const b=ESTADO.activo.ejercicios[bi], ult=b.series[b.series.length-1];
@@ -1102,6 +1325,12 @@ async function ciclarTipo(bi,si){
   s.tipo=orden[(orden.indexOf(s.tipo)+1)%orden.length];
   await guardarActivo(); pintarBloques();
 }
+function limpiarSSHuerfanas(lista){
+  // un grupo de superserie necesita al menos 2 miembros; si queda 1, se desmarca
+  const cuenta={};
+  lista.forEach(x=>{ if(x.ss) cuenta[x.ss]=(cuenta[x.ss]||0)+1; });
+  lista.forEach(x=>{ if(x.ss && cuenta[x.ss]<2) x.ss=null; });
+}
 async function alternarSS(bi){
   const b=ESTADO.activo.ejercicios[bi];
   if(b.ss){ b.ss=null; }
@@ -1110,6 +1339,7 @@ async function alternarSS(bi){
     if(!ant.ss){ ant.ss=String.fromCharCode(65+ESTADO.activo.ejercicios.filter(x=>x.ss).length%6); }
     b.ss=ant.ss;
   }
+  limpiarSSHuerfanas(ESTADO.activo.ejercicios);
   await guardarActivo(); pintarBloques();
 }
 async function alternarHecha(bi,si){
@@ -1306,13 +1536,14 @@ function pintarEditorEjercicios(){
   }).join("") : `<div class="vacio" style="padding:.5rem 0">Añade el primer ejercicio.</div>`;
 }
 function agregarEjEditor(id){ editor.ejercicios.push({ejId:id,ss:null,n:3,reps:10,peso:null}); pintarEditorEjercicios(); abrirModal("m-editor"); }
-function quitarEjEditor(i){ editor.ejercicios.splice(i,1); pintarEditorEjercicios(); }
+function quitarEjEditor(i){ editor.ejercicios.splice(i,1); limpiarSSHuerfanas(editor.ejercicios); pintarEditorEjercicios(); }
 function editorSS(i){
   const x=editor.ejercicios[i];
   if(x.ss){ x.ss=null; }
   else{ const ant=editor.ejercicios[i-1];
     if(!ant.ss) ant.ss=String.fromCharCode(65+editor.ejercicios.filter(y=>y.ss).length%6);
     x.ss=ant.ss; }
+  limpiarSSHuerfanas(editor.ejercicios);
   pintarEditorEjercicios();
 }
 async function guardarRutinaEditor(){
@@ -1597,6 +1828,8 @@ function abrirEjDetalle(id){
   const maxAct=Math.max(...Object.values(e.act));
   $("ejd-visual").innerHTML =
     (pictoDe(e)?`<div class="fila" style="justify-content:center;margin:.1rem 0 .5rem"><div class="picto picto-grande">${pictoDe(e)}</div></div>`:"")+
+    (e.como?`<p class="peq" style="margin-bottom:.6rem;line-height:1.45">${e.como}</p>`:"")+
+    `<p class="peq" style="color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:.45rem .6rem;margin-bottom:.7rem">⚖ ${REG_TXT[regDe(e)]}</p>`+
     `<div class="act-lista">${Object.entries(e.act).sort((a,b)=>b[1]-a[1]).map(([m,w])=>`<span class="chip ${w===maxAct?"acento":""}">${MUSCULOS[m]} ${(w*100).toFixed(0)}%</span>`).join("")}</div>`+
     mapaActivacionHTML(e.act);
   $("ejd-historial").innerHTML = sesiones.length?
@@ -1608,7 +1841,7 @@ function abrirEjDetalle(id){
 function abrirNuevoEjercicio(){
   editandoId=null;
   $("nuevoej-titulo").textContent="Nuevo ejercicio";
-  $("ne-nombre").value=""; $("ne-notas").value=""; $("ne-descanso").value="";
+  $("ne-nombre").value=""; $("ne-notas").value=""; $("ne-descanso").value=""; $("ne-reg").value="";
   $("ne-musculo").innerHTML=Object.entries(MUSCULOS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("");
   $("ne-equipo").innerHTML=Object.entries(EQUIPOS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("");
   pintarSecundarios([]);
@@ -1622,7 +1855,7 @@ function editarEjercicioActual(){
   $("ne-musculo").innerHTML=Object.entries(MUSCULOS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("");
   $("ne-equipo").innerHTML=Object.entries(EQUIPOS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("");
   $("ne-nombre").value=e.nombre; $("ne-musculo").value=e.m; $("ne-equipo").value=e.eq;
-  $("ne-descanso").value=e.descanso||""; $("ne-notas").value=e.notas||"";
+  $("ne-descanso").value=e.descanso||""; $("ne-notas").value=e.notas||""; $("ne-reg").value=e.reg||"";
   pintarSecundarios(e.sec||[]);
   abrirModal("m-nuevo-ej");
 }
@@ -1652,6 +1885,7 @@ async function guardarNuevoEjercicio(){
   }
   const registro={ id, nombre, m, sec, act, patron: actual?actual.patron:null,
     eq:$("ne-equipo").value, descanso:+$("ne-descanso").value||null, notas:$("ne-notas").value.trim(),
+    reg: $("ne-reg").value||null,
     custom: !BIBLIOTECA.some(b=>b[0]===id) };
   await dbPut("ejercicios",registro);
   ESTADO.personalizados=ESTADO.personalizados.filter(e=>e.id!==id).concat(registro);
@@ -1746,8 +1980,14 @@ async function cargarTodo(){
   reconstruirMapa(); pintarAjustes(); pintarHoy();
   if(ESTADO.activo){ arrancarCrono(); pedirWake(); }
 }
+function medirCabecera(){
+  const h=document.querySelector("header.app");
+  if(h) document.documentElement.style.setProperty("--alto-cab", h.offsetHeight+"px");
+}
+window.addEventListener("resize", medirCabecera);
 (async function init(){
   $("fecha-hoy").textContent=new Date().toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
+  medirCabecera();
   await abrirDB(); await cargarTodo();
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 })();

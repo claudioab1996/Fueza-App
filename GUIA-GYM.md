@@ -23,6 +23,14 @@ A diferencia de la app de nutrición, aquí hay 5 archivos en vez de 1: el servi
 
 ⚠️ **Misma advertencia que la app de nutrición:** los datos viven en IndexedDB de Safari. Borrar historial de navegación, eliminar el icono o cambiar la URL de despliegue destruye los datos locales. **Exporta el JSON de respaldo con frecuencia** (Ajustes → Copia de seguridad completa).
 
+## Nuevo en la V2.1
+
+- **Crono siempre visible:** el temporizador de la sesión queda fijo bajo el encabezado al hacer scroll durante el entrenamiento.
+- **Superseries corregidas:** al desenlazar un ejercicio (o quitarlo), el compañero que quedaba solo se desmarca automáticamente — un grupo de superserie ya no puede quedar con un único miembro.
+- **Descripción de ejecución en los 138 ejercicios:** al abrir un ejercicio, una nota breve de técnica (postura, recorrido, errores a evitar).
+- **Convención de registro del peso, visible en cada ejercicio y durante el entreno:** peso total (barra/máquina), por mancuerna (escribe el peso de UNA), por lado (unilaterales: series y peso por lado), o corporal (registra solo el lastre; en asistidas, el contrapeso). En ejercicios propios puedes fijarla manualmente.
+- **Pictogramas refinados:** press inclinado, sentadilla, crunch y gemelos redibujados para mayor claridad.
+
 ## Nuevo en la V2
 
 **Planes y rutinas desde cero**
