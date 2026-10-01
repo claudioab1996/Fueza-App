@@ -1,4 +1,4 @@
-# Fuerza V2 — Guía de despliegue y uso
+# Fuerza 3.0 — Guía de despliegue y uso
 
 App personal de registro de entrenamiento de fuerza. Mismo patrón que la PWA de nutrición: local-first, sin cuentas, sin servidores, datos 100% tuyos.
 
@@ -6,7 +6,7 @@ App personal de registro de entrenamiento de fuerza. Mismo patrón que la PWA de
 
 | Archivo | Qué es |
 |---|---|
-| `index.html` | Toda la app (HTML + CSS + JS, ~128 KB) |
+| `index.html` | Toda la app (HTML + CSS + JS + tipografías, ~286 KB) |
 | `sw.js` | Service worker → funcionamiento offline real |
 | `manifest.webmanifest` | Metadatos de la PWA |
 | `icon-180.png` / `icon-512.png` | Icono de la app |
@@ -22,6 +22,22 @@ A diferencia de la app de nutrición, aquí hay 5 archivos en vez de 1: el servi
 5. Abre la app una vez con conexión (el service worker cachea todo). Desde ahí funciona sin internet.
 
 ⚠️ **Misma advertencia que la app de nutrición:** los datos viven en IndexedDB de Safari. Borrar historial de navegación, eliminar el icono o cambiar la URL de despliegue destruye los datos locales. **Exporta el JSON de respaldo con frecuencia** (Ajustes → Copia de seguridad completa).
+
+## Nuevo en la 3.0
+
+**Para actualizar:** reemplaza en el repositorio `index.html`, `sw.js`, `manifest.webmanifest` y los dos iconos. Si la app ya estaba instalada, ábrela dos veces con conexión para que cargue la versión nueva.
+
+**Teléfono nuevo:** abre la dirección de la app, añádela a la pantalla de inicio y ve a Ajustes → Restaurar una copia, eligiendo el archivo JSON de respaldo.
+
+- **Diseño nuevo:** tema claro y oscuro (automático según el teléfono, o fijo desde Ajustes), tipografía propia incluida en el archivo (funciona sin conexión), botones y números más grandes.
+- **Colores por tipo de día:** rojo empuje, azul tirón, verde pierna, amarillo core. Se usan en las miniaturas, el historial, la semana y el calendario.
+- **Inicio:** tira de la semana con los días entrenados y una tarjeta "Hoy te toca" que propone el tipo de día que llevas más tiempo sin hacer y lo carga con tus últimas series.
+- **Registro de series:** botones + y − para peso y repeticiones (el salto de peso se elige en Ajustes), contador de series hechas, botón "− Serie", y la serie siguiente resaltada.
+- **Sugerencia de carga por repeticiones:** mismo peso y una repetición más hasta llegar al tope (12 por defecto) en todas las series; entonces propone subir peso. El botón "Usar" rellena las series pendientes.
+- **Esfuerzo en palabras:** al marcar una serie puedes tocar Fácil, Bien, Dura o Al límite. Sustituye a la casilla RPE (escala de esfuerzo de 5 a 10); se guarda igual por dentro.
+- **Miniaturas redibujadas:** 24 figuras nuevas, más grandes; los ejercicios propios pueden elegir su dibujo en "Tipo de movimiento".
+- **Progreso:** gráfico de fuerza con cifras de inicio y fin, kilos por semana con semanas vacías visibles, récords con miniatura.
+- **Historial:** cada entrenamiento muestra su tipo y se puede repetir desde su detalle.
 
 ## Nuevo en la V2.1
 
