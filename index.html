@@ -220,6 +220,33 @@ nav.tabs svg{width:24px;height:24px}
 .esfuerzo span{font-size:.8rem;opacity:.7;flex-basis:100%}
 .esfuerzo button{flex:1;min-height:38px;padding:0 .3rem;border-radius:10px;font-size:.84rem;font-weight:600;color:inherit;border:1px solid color-mix(in srgb,var(--on-inv) 28%,transparent)}
 .esfuerzo button.sel{background:var(--on-inv);color:var(--inv);border-color:var(--on-inv)}
+/* modo descanso: el contador a pantalla completa */
+#modo-descanso{position:fixed;inset:0;z-index:70;display:none;flex-direction:column;background:var(--bg);color:var(--text);
+  padding:calc(.8rem + var(--safe-t)) 1.1rem calc(1.1rem + var(--safe-b))}
+#modo-descanso.visible{display:flex}
+.md-top{display:flex;justify-content:space-between;align-items:center}
+.md-centro{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0}
+.md-t{font-family:var(--disp);font-weight:800;font-size:min(42vw,34vh,15rem);line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+#modo-descanso .desc-prog{width:100%;max-width:420px;height:8px;border-radius:4px;margin-top:1.2rem}
+#modo-descanso .desc-prog i{border-radius:4px;background:var(--ok)}
+.md-sig{width:100%;max-width:520px;margin:0 auto .8rem;background:var(--surface);border-radius:var(--r);padding:.9rem;box-shadow:var(--sombra)}
+:root.oscuro .md-sig{border:1px solid var(--line)}
+.md-sig .fila{margin-top:.5rem}
+.md-sig .nom{font-weight:600;font-size:1.05rem;line-height:1.2}
+.md-sig .que{font-family:var(--disp);font-weight:800;font-size:1.9rem;line-height:1.05;margin-top:.15rem}
+.md-sig .que small{font-family:var(--txt);font-weight:500;font-size:.85rem;color:var(--muted)}
+.md-abajo{width:100%;max-width:520px;margin:0 auto}
+.md-abajo .esfuerzo{margin:0 0 .8rem;--on-inv:var(--text);--inv:var(--bg)}
+.md-abajo .esfuerzo button{min-height:46px;font-size:.92rem}
+.md-btns{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:.5rem}
+@media (orientation:landscape) and (max-height:520px){
+  #modo-descanso.visible{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;column-gap:1.2rem}
+  .md-top{grid-column:1/3}
+  .md-centro{grid-column:1;grid-row:2/4}
+  .md-t{font-size:min(24vw,52vh)}
+  .md-sig{grid-column:2;grid-row:2;align-self:end}
+  .md-abajo{grid-column:2;grid-row:3}
+}
 
 /* ---------- listas ---------- */
 .item-lista{display:flex;justify-content:space-between;align-items:center;gap:.7rem;padding:.7rem 0;border-bottom:1px solid var(--line);min-height:60px}
@@ -458,6 +485,9 @@ nav.tabs svg{width:24px;height:24px}
         <select id="aj-redondeo"><option>5</option><option>2.5</option><option>1</option><option>0.5</option></select></div>
       <div class="campo"><label>Descanso por defecto (segundos)</label>
         <input type="number" inputmode="numeric" id="aj-descanso" value="90"></div>
+      <div class="campo"><label>Mostrar el descanso a pantalla completa</label>
+        <select id="aj-descgrande"><option value="1">Sí, al marcar cada serie</option><option value="0">No, solo la barra pequeña</option></select>
+        <p class="ayuda">Contador gigante y la serie que sigue, para verlo de lejos con el teléfono apoyado. Se cierra solo al terminar el descanso.</p></div>
       <button class="btn primario" onclick="guardarAjustes()">Guardar ajustes</button>
     </div>
     <div class="card">
@@ -479,7 +509,7 @@ nav.tabs svg{width:24px;height:24px}
       <button class="btn" style="margin-bottom:.5rem" onclick="exportarCSV()">Exportar historial a hoja de cálculo (CSV)</button>
       <button class="btn peligro" onclick="borrarTodo()">Borrar todos los datos</button>
     </div>
-    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.0 · privado, sin cuentas ni servidores</p>
+    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.1 · privado, sin cuentas ni servidores</p>
   </section>
 </main>
 
@@ -497,7 +527,7 @@ nav.tabs svg{width:24px;height:24px}
 <!-- descanso -->
 <div id="barra-descanso">
   <div class="desc-fila">
-    <div><div class="eyebrow">Descanso</div><div class="t" id="descanso-t">1:30</div></div>
+    <button onclick="abrirModoDescanso()" aria-label="Ver el descanso a pantalla completa" style="text-align:left"><div class="eyebrow">Descanso · ampliar</div><div class="t" id="descanso-t">1:30</div></button>
     <div class="fila" style="gap:.35rem">
       <button class="btn mini" onclick="ajustarDescanso(-15)">−15 s</button>
       <button class="btn mini" onclick="ajustarDescanso(15)">+15 s</button>
@@ -506,6 +536,20 @@ nav.tabs svg{width:24px;height:24px}
   </div>
   <div class="desc-prog"><i id="descanso-fill"></i></div>
   <div class="esfuerzo" id="esfuerzo-fila"></div>
+</div>
+
+<div id="modo-descanso" role="dialog" aria-label="Descanso">
+  <div class="md-top"><span class="eyebrow">Descanso</span><button class="btn mini" onclick="cerrarModoDescanso()">Volver al registro</button></div>
+  <div class="md-centro"><div class="md-t" id="md-t">1:30</div><div class="desc-prog"><i id="md-fill"></i></div></div>
+  <div class="md-sig" id="md-sig"></div>
+  <div class="md-abajo">
+    <div class="esfuerzo" id="md-esfuerzo"></div>
+    <div class="md-btns">
+      <button class="btn" onclick="ajustarDescanso(-15)">−15 s</button>
+      <button class="btn" onclick="ajustarDescanso(15)">+15 s</button>
+      <button class="btn primario" onclick="pararDescanso()">Saltar descanso</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast-pr" role="status"></div>
@@ -1062,7 +1106,7 @@ let db;
 /* =====================================================
    V3 — utilidades de presentación
 ===================================================== */
-const PREFS_DEF = { barra:20, discos:[25,20,15,10,5,2.5,1.25], descanso:90, redondeo:2.5, formula:"epley", tema:"auto", esfuerzo:true, repsTope:12 };
+const PREFS_DEF = { barra:20, discos:[25,20,15,10,5,2.5,1.25], descanso:90, redondeo:2.5, formula:"epley", tema:"auto", esfuerzo:true, repsTope:12, descGrande:true };
 const IC = {
   x:`<svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
   edit:`<svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>`,
@@ -1208,12 +1252,40 @@ const ESFUERZOS=[[6,"Fácil"],[7.5,"Bien"],[9,"Dura"],[10,"Al límite"]];
 const esfuerzoTxt = r => r==null?"": r<=6.5?"fácil": r<=8?"bien": r<=9.5?"dura":"al límite";
 let ultimaHecha=null;
 function pintarEsfuerzo(){
-  const f=$("esfuerzo-fila");
   const s=ultimaHecha&&ESTADO.activo&&ESTADO.activo.ejercicios[ultimaHecha.bi]&&ESTADO.activo.ejercicios[ultimaHecha.bi].series[ultimaHecha.si];
-  if(ESTADO.prefs.esfuerzo===false||!s){ f.style.display="none"; return; }
-  f.style.display="flex";
-  f.innerHTML=`<span>¿Qué tal esa serie?</span>`+ESFUERZOS.map(([v,n])=>`<button class="${s.rpe===v?"sel":""}" onclick="setEsfuerzo(${v})">${n}</button>`).join("");
+  ["esfuerzo-fila","md-esfuerzo"].forEach(id=>{
+    const f=$(id);
+    if(ESTADO.prefs.esfuerzo===false||!s){ f.style.display="none"; return; }
+    f.style.display="flex";
+    f.innerHTML=`<span>¿Qué tal esa serie?</span>`+ESFUERZOS.map(([v,n])=>`<button class="${s.rpe===v?"sel":""}" onclick="setEsfuerzo(${v})">${n}</button>`).join("");
+  });
 }
+/* ---- modo descanso (pantalla completa) ---- */
+/* la serie que sigue: en superserie, el siguiente ejercicio del grupo; si no, la siguiente pendiente */
+function siguienteSerie(bi){
+  const ejs=ESTADO.activo.ejercicios, pend=i=>ejs[i].series.findIndex(s=>!s.hecha);
+  const orden=[];
+  if(ejs[bi] && ejs[bi].ss){
+    for(let k=1;k<=ejs.length;k++){ const i=(bi+k)%ejs.length; if(ejs[i].ss===ejs[bi].ss) orden.push(i); }
+  }
+  orden.push(bi);
+  for(let i=bi+1;i<ejs.length;i++) orden.push(i);
+  for(let i=0;i<bi;i++) orden.push(i);
+  for(const i of orden){ const si=pend(i); if(si>=0) return {bi:i,si}; }
+  return null;
+}
+function pintarModoDescanso(){
+  const cont=$("md-sig"); if(!ESTADO.activo){ cont.innerHTML=""; return; }
+  const sg=siguienteSerie(ultimaHecha?ultimaHecha.bi:0);
+  if(!sg){ cont.innerHTML=`<p class="eyebrow">Ya no quedan series</p><div class="que" style="font-size:1.5rem">Puedes terminar el entrenamiento</div>`; return; }
+  const b=ESTADO.activo.ejercicios[sg.bi], e=ej(b.ejId), s=b.series[sg.si];
+  const cambia=ultimaHecha && sg.bi!==ultimaHecha.bi;
+  cont.innerHTML=`<p class="eyebrow">${cambia?"Sigue otro ejercicio":"Sigue"}</p>
+    <div class="fila">${pictoHTML(e)}<div style="min-width:0"><div class="nom">${e.nombre}</div>
+    <div class="que">${s.peso?fmtKg(s.peso)+" kg × ":""}${s.reps||"–"}${s.peso?"":" reps"} <small>· serie ${sg.si+1} de ${b.series.length}</small></div></div></div>`;
+}
+function abrirModoDescanso(){ if(!descFin) return; pintarModoDescanso(); pintarEsfuerzo(); $("modo-descanso").classList.add("visible"); }
+function cerrarModoDescanso(){ $("modo-descanso").classList.remove("visible"); }
 async function setEsfuerzo(v){
   const s=ultimaHecha&&ESTADO.activo&&ESTADO.activo.ejercicios[ultimaHecha.bi]&&ESTADO.activo.ejercicios[ultimaHecha.bi].series[ultimaHecha.si];
   if(!s) return;
@@ -1653,18 +1725,19 @@ function iniciarDescanso(seg){
   descTotal=seg*1000; descFin=Date.now()+descTotal;
   $("barra-descanso").classList.add("visible");
   pintarEsfuerzo();
+  if(ESTADO.prefs.descGrande!==false) abrirModoDescanso();
   clearInterval(descInt);
   const tic=()=>{
     const resta=descFin-Date.now();
     if(resta<=0){ pararDescanso(); pitido(); if(navigator.vibrate) navigator.vibrate([200,80,200]); toast("Descanso terminado"); return; }
     const s=Math.ceil(resta/1000);
-    $("descanso-t").textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
-    $("descanso-fill").style.width=Math.max(0,Math.min(100,resta/descTotal*100))+"%";
+    $("descanso-t").textContent=$("md-t").textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+    $("descanso-fill").style.width=$("md-fill").style.width=Math.max(0,Math.min(100,resta/descTotal*100))+"%";
   };
   tic(); descInt=setInterval(tic,250);
 }
 function ajustarDescanso(seg){ if(descFin){ descFin+=seg*1000; if(descFin-Date.now()>descTotal) descTotal=descFin-Date.now(); } }
-function pararDescanso(){ clearInterval(descInt); descInt=null; descFin=null; $("barra-descanso").classList.remove("visible"); }
+function pararDescanso(){ clearInterval(descInt); descInt=null; descFin=null; $("barra-descanso").classList.remove("visible"); cerrarModoDescanso(); }
 
 /* ---- terminar y guardar ---- */
 function metricasEntreno(en){
@@ -2172,7 +2245,7 @@ function pintarAjustes(){
   const p=ESTADO.prefs;
   $("aj-barra").value=p.barra; $("aj-discos").value=p.discos.join(",");
   $("aj-descanso").value=p.descanso; $("aj-redondeo").value=p.redondeo; $("aj-formula").value=p.formula;
-  $("aj-tema").value=p.tema||"auto"; $("aj-esfuerzo").value=p.esfuerzo===false?"0":"1"; $("aj-tope").value=p.repsTope||12;
+  $("aj-tema").value=p.tema||"auto"; $("aj-esfuerzo").value=p.esfuerzo===false?"0":"1"; $("aj-tope").value=p.repsTope||12; $("aj-descgrande").value=p.descGrande===false?"0":"1";
 }
 async function guardarAjustes(){
   ESTADO.prefs={
@@ -2183,6 +2256,7 @@ async function guardarAjustes(){
     formula:$("aj-formula").value,
     tema:$("aj-tema").value,
     esfuerzo:$("aj-esfuerzo").value==="1",
+    descGrande:$("aj-descgrande").value==="1",
     repsTope:Math.max(5,Math.min(30,+$("aj-tope").value||12))
   };
   await kvSet("prefs",ESTADO.prefs); aplicarTema(); pintarAjustes(); toast("Ajustes guardados");
