@@ -1,0 +1,4 @@
+# Respaldos personales: no subir a GitHub
+*.json
+!manifest.webmanifest
+*.zip
