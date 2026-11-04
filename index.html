@@ -55,7 +55,7 @@ if(osc)document.documentElement.classList.add("oscuro");})();
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:16px;-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font-family:var(--txt);font-size:.95rem;line-height:1.35;
-  padding-bottom:calc(84px + var(--safe-b));overscroll-behavior-y:none}
+  padding-bottom:calc(84px + var(--safe-b) + var(--alto-descanso,0px));overscroll-behavior-y:none}
 button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input,select,textarea{font-family:inherit;font-size:1rem;color:var(--text);background:var(--surface2);border:1px solid var(--line);
@@ -509,7 +509,7 @@ nav.tabs svg{width:24px;height:24px}
       <button class="btn" style="margin-bottom:.5rem" onclick="exportarCSV()">Exportar historial a hoja de cálculo (CSV)</button>
       <button class="btn peligro" onclick="borrarTodo()">Borrar todos los datos</button>
     </div>
-    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.1 · privado, sin cuentas ni servidores</p>
+    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.2 · privado, sin cuentas ni servidores</p>
   </section>
 </main>
 
@@ -759,6 +759,7 @@ const BIBLIOTECA = [
 ["curl-predicador","Curl predicador (Scott)","maquina",90,"curl_codo",{biceps:.85,antebrazos:.15}],
 ["curl-maquina","Curl de bíceps en máquina","maquina",75,"curl_codo",{biceps:.88,antebrazos:.12}],
 ["curl-cable","Curl en polea baja","cable",75,"curl_codo",{biceps:.8,antebrazos:.2}],
+["curl-martillo-polea","Curl martillo en polea (cuerda)","cable",75,"curl_codo",{biceps:.6,antebrazos:.4}],
 ["curl-bayesian","Curl bayesian en polea","cable",75,"curl_codo",{biceps:.85,antebrazos:.15}],
 ["curl-concentrado","Curl concentrado","mancuernas",60,"curl_codo",{biceps:.88,antebrazos:.12}],
 ["curl-arana","Curl araña","mancuernas",75,"curl_codo",{biceps:.88,antebrazos:.12}],
@@ -938,6 +939,7 @@ const COMO = {
 "curl-predicador":"Brazos sobre el pupitre; extiende casi por completo abajo y no despegues los codos.",
 "curl-maquina":"Codos alineados con el eje de giro. Sube, aprieta 1 segundo y baja lento.",
 "curl-cable":"Polea baja; tensión constante. Codos fijos al costado.",
+"curl-martillo-polea":"Polea baja con cuerda, palmas enfrentadas todo el recorrido. Codos fijos; trabaja braquial y antebrazo.",
 "curl-bayesian":"De espaldas a la polea baja, brazo por detrás del cuerpo: máximo estiramiento.",
 "curl-concentrado":"Sentado, codo apoyado en el muslo interno. Un brazo por serie, sin impulso.",
 "curl-arana":"Pecho apoyado en banco inclinado, brazos verticales colgando. Cero impulso posible.",
@@ -1738,6 +1740,11 @@ function iniciarDescanso(seg){
 }
 function ajustarDescanso(seg){ if(descFin){ descFin+=seg*1000; if(descFin-Date.now()>descTotal) descTotal=descFin-Date.now(); } }
 function pararDescanso(){ clearInterval(descInt); descInt=null; descFin=null; $("barra-descanso").classList.remove("visible"); cerrarModoDescanso(); }
+/* deja hueco al final de la página del tamaño de la barra de descanso, para que no tape "Añadir ejercicio" */
+if(window.ResizeObserver) new ResizeObserver(()=>{
+  const h=$("barra-descanso").offsetHeight;
+  document.documentElement.style.setProperty("--alto-descanso", h? (h+12)+"px" : "0px");
+}).observe($("barra-descanso"));
 
 /* ---- terminar y guardar ---- */
 function metricasEntreno(en){

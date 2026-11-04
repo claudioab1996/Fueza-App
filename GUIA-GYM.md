@@ -23,6 +23,11 @@ A diferencia de la app de nutrición, aquí hay 5 archivos en vez de 1: el servi
 
 ⚠️ **Misma advertencia que la app de nutrición:** los datos viven en IndexedDB de Safari. Borrar historial de navegación, eliminar el icono o cambiar la URL de despliegue destruye los datos locales. **Exporta el JSON de respaldo con frecuencia** (Ajustes → Copia de seguridad completa).
 
+## Nuevo en la 3.2
+
+- **Barra de descanso:** ya no tapa "Añadir ejercicio" ni "Terminar entrenamiento"; la página deja hueco al final mientras está visible.
+- **Ejercicio nuevo:** curl martillo en polea (cuerda).
+
 ## Nuevo en la 3.1
 
 - **Modo descanso:** al marcar una serie, el contador de descanso ocupa toda la pantalla, con la serie que sigue (ejercicio, peso, repeticiones) y los botones de esfuerzo, −15 s, +15 s y saltar. Se cierra solo al terminar el descanso; "Volver al registro" lo minimiza y tocar el contador de la barra pequeña lo vuelve a abrir. Se desactiva en Ajustes. Para actualizar basta con reemplazar `index.html` y `sw.js`.
