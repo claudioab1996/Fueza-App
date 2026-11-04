@@ -355,6 +355,26 @@ nav.tabs svg{width:24px;height:24px}
 .ed-ej input{background:var(--surface)}
 @media (max-width:359px){.seg{grid-template-columns:repeat(5,32px)}.step{grid-template-columns:26px 1fr 26px}.step input{font-size:1.3rem}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ---------- coach ---------- */
+.coach-cab{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.7rem}
+#coach-mensajes{display:flex;flex-direction:column;gap:.6rem;padding-bottom:.6rem}
+.msj{max-width:88%;padding:.65rem .85rem;border-radius:18px;line-height:1.45;overflow-wrap:anywhere}
+.msj.yo{align-self:flex-end;background:var(--inv);color:var(--on-inv);border-bottom-right-radius:6px;white-space:pre-wrap}
+.msj.coach{align-self:flex-start;background:var(--surface);box-shadow:var(--sombra);border-bottom-left-radius:6px}
+:root.oscuro .msj.coach{border:1px solid var(--line)}
+.msj.coach p{margin:0 0 .5rem}.msj.coach p:last-child{margin-bottom:0}
+.msj.coach ul,.msj.coach ol{margin:0 0 .5rem 1.2rem}.msj.coach li{margin-bottom:.2rem}
+.msj.coach h4{font-size:.95rem;margin:.4rem 0 .3rem}
+.msj.coach code{font-size:.85em;background:var(--surface2);padding:0 .25rem;border-radius:4px}
+.msj.error{align-self:stretch;max-width:none;background:var(--danger-soft);color:var(--danger);font-size:.9rem}
+.msj.pensando{color:var(--muted)}
+.coach-sugerencias{display:flex;flex-direction:column;gap:.45rem;margin:.2rem 0 .6rem}
+.coach-sugerencias button{text-align:left;padding:.65rem .85rem;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--text);font-size:.92rem}
+.coach-entrada{position:sticky;bottom:calc(84px + var(--safe-b));display:flex;gap:.5rem;align-items:flex-end;
+  background:var(--bg);padding:.5rem 0}
+.coach-entrada textarea{flex:1;resize:none;min-height:50px;max-height:160px;border-radius:14px;padding:.75rem .85rem;line-height:1.35;background:var(--surface)}
+.coach-enviar{width:50px;flex:0 0 50px;padding:0}
+.coach-enviar:disabled{opacity:.45}
 </style>
 </head>
 <body>
@@ -469,6 +489,28 @@ nav.tabs svg{width:24px;height:24px}
     <button class="btn" onclick="abrirNuevoEjercicio()">＋ Crear ejercicio propio</button>
   </section>
 
+  <!-- ============ COACH ============ -->
+  <section class="vista" id="vista-coach">
+    <div id="coach-sin-clave" class="card" style="display:none">
+      <div class="card-cab"><h2 class="titulo">Tu coach</h2></div>
+      <p style="margin-bottom:.8rem">Un entrenador con IA que conoce todo tu historial: pregúntale cómo vas en un ejercicio, si tu distribución está bien o qué ajustar.</p>
+      <p class="peq muted" style="margin-bottom:.9rem">Para activarlo, pega tu clave de API de Anthropic en Ajustes → Coach.</p>
+      <button class="btn primario" onclick="irAjustesCoach()">Ir a Ajustes</button>
+    </div>
+    <div id="coach-chat" style="display:none">
+      <div class="coach-cab">
+        <span class="peq muted" id="coach-info"></span>
+        <button class="btn mini" onclick="nuevaConversacionCoach()">Nueva conversación</button>
+      </div>
+      <div id="coach-mensajes"></div>
+      <div class="coach-entrada">
+        <textarea id="coach-texto" rows="1" placeholder="Pregúntale a tu coach…" oninput="ajustarAltoCoach()"></textarea>
+        <button class="btn primario coach-enviar" id="coach-enviar" onclick="enviarCoach()" aria-label="Enviar">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ AJUSTES ============ -->
   <section class="vista" id="vista-ajustes">
     <div class="card">
@@ -500,6 +542,17 @@ nav.tabs svg{width:24px;height:24px}
         <select id="aj-formula"><option value="epley">Epley</option><option value="brzycki">Brzycki</option></select></div>
       <button class="btn" onclick="abrirDiscos()">Abrir calculadora de discos</button>
     </div>
+    <div class="card" id="aj-coach-card">
+      <div class="card-cab"><h2 class="titulo">Coach</h2></div>
+      <div class="campo"><label>Clave de API de Anthropic</label>
+        <input type="password" id="aj-coach-clave" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…">
+        <p class="ayuda" id="aj-coach-estado"></p>
+        <p class="ayuda">La clave se guarda solo en este teléfono: no va en la copia de seguridad ni se sube a ningún sitio. Cada pregunta al coach envía tu historial a Anthropic y cuesta unos pocos centavos de dólar a tu cuenta.</p></div>
+      <div class="fila" style="gap:.5rem">
+        <button class="btn primario" onclick="guardarClaveCoach()">Guardar clave</button>
+        <button class="btn" onclick="borrarClaveCoach()">Quitar clave</button>
+      </div>
+    </div>
     <div class="card">
       <div class="card-cab"><h2 class="titulo">Tus datos</h2></div>
       <p class="peq muted" style="margin-bottom:.8rem">Todo se guarda solo en este teléfono. La copia de seguridad es lo único que te permite recuperarlo si cambias de teléfono o borras el navegador.</p>
@@ -509,7 +562,7 @@ nav.tabs svg{width:24px;height:24px}
       <button class="btn" style="margin-bottom:.5rem" onclick="exportarCSV()">Exportar historial a hoja de cálculo (CSV)</button>
       <button class="btn peligro" onclick="borrarTodo()">Borrar todos los datos</button>
     </div>
-    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.2 · privado, sin cuentas ni servidores</p>
+    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.3 · sin cuentas; tus datos solo salen del teléfono si usas el coach</p>
   </section>
 </main>
 
@@ -520,6 +573,8 @@ nav.tabs svg{width:24px;height:24px}
     <svg class="ic" viewBox="0 0 24 24"><path d="M3 20h18M6 16l4-6 4 3 5-8"/></svg>Progreso</button>
   <button data-vista="ejercicios" onclick="irVista('ejercicios',this)">
     <svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Ejercicios</button>
+  <button data-vista="coach" onclick="irVista('coach',this)">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>Coach</button>
   <button data-vista="ajustes" onclick="irVista('ajustes',this)">
     <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Ajustes</button>
 </div></nav>
@@ -1398,6 +1453,8 @@ function irVista(nombre,btn){
   btn.classList.add("activa");
   if(nombre==="progreso") pintarProgreso();
   if(nombre==="ejercicios") pintarBiblioteca();
+  if(nombre==="ajustes") pintarAjustesCoach();
+  if(nombre==="coach"){ abrirCoach(); return; }
   window.scrollTo(0,0);
 }
 
@@ -2343,6 +2400,249 @@ function medirCabecera(){
   if(h) document.documentElement.style.setProperty("--alto-cab", h.offsetHeight+"px");
 }
 window.addEventListener("resize", medirCabecera);
+/* =====================================================
+   Coach (Claude, con la clave de API del usuario)
+   La clave y la conversación viven en el almacén "kv" de este teléfono;
+   no entran en la copia de seguridad.
+   ===================================================== */
+const COACH_SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.3.0/+esm";
+const COACH_MODELO = "claude-opus-5-5";
+const COACH_INSTRUCCIONES = `Eres el coach de fuerza personal del usuario dentro de su app de registro de entrenamiento "Fuerza". Más abajo tienes su historial completo, exportado de la app al empezar esta conversación.
+
+Cómo trabajar:
+- Responde en español, con tono cercano y directo, como un entrenador que conoce a su atleta.
+- Apóyate en los datos: cita fechas, pesos, repeticiones y tendencias concretas. Si los datos no alcanzan para concluir algo (pocas sesiones, un ejercicio registrado una sola vez), dilo en lugar de suponer.
+- La 1RM es estimada con la fórmula indicada; trátala como una aproximación.
+- Fíjate en cómo se registra el peso de cada ejercicio (total, por mancuerna, por lado o lastre) antes de comparar cargas. En los ejercicios asistidos el peso es el contrapeso: menos kilos significa más difícil, así que su 1RM estimada no tiene sentido.
+- Las series por músculo están ponderadas por la activación de cada ejercicio (el músculo principal cuenta 1, los secundarios una fracción).
+- El usuario te lee en el teléfono: respuestas breves, párrafos cortos, listas cuando ayuden y negritas para lo importante. Sin tablas.
+- Ante dolor o posibles lesiones, da pautas generales prudentes y recomienda consultar a un profesional si el dolor es agudo o persiste.`;
+
+let coachConv=null, coachEnCurso=false, coachSDK=null;
+
+function escHTML(t){ return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function mdCoach(t){
+  const inl=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");
+  let html="", lista=null;
+  const cerrar=()=>{ if(lista){ html+=`</${lista}>`; lista=null; } };
+  escHTML(t).split("\n").forEach(l=>{
+    let m;
+    if((m=l.match(/^\s*[-*•]\s+(.*)/))){ if(lista!=="ul"){ cerrar(); html+="<ul>"; lista="ul"; } html+=`<li>${inl(m[1])}</li>`; return; }
+    if((m=l.match(/^\s*\d+[.)]\s+(.*)/))){ if(lista!=="ol"){ cerrar(); html+="<ol>"; lista="ol"; } html+=`<li>${inl(m[1])}</li>`; return; }
+    cerrar();
+    if((m=l.match(/^#{1,6}\s+(.*)/))){ html+=`<h4>${inl(m[1])}</h4>`; return; }
+    if(l.trim()) html+=`<p>${inl(l)}</p>`;
+  });
+  cerrar();
+  return html;
+}
+
+/* ---- resumen de los datos que se le pasa al coach ---- */
+function lunesDe(fecha){
+  const d=new Date(fecha+"T12:00:00"); const dia=(d.getDay()+6)%7; d.setDate(d.getDate()-dia);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function resumenParaCoach(){
+  const L=[], p=ESTADO.prefs;
+  const ens=[...ESTADO.entrenos].sort((a,b)=>a.id-b.id);
+  const REG_NOM={t:"peso total",m:"kg por mancuerna",u:"kg por lado",c:"kg de lastre"};
+  const TIPO_NOM={C:"calentamiento",D:"descendente",F:"al fallo"};
+  L.push(`# Datos del usuario (a fecha ${hoyISO()})`);
+  L.push(`Fórmula de 1RM estimada: ${p.formula==="brzycki"?"Brzycki":"Epley"}. Barra: ${p.barra} kg. Descanso por defecto: ${p.descanso} s.`);
+  L.push(`Entrenamientos registrados: ${ens.length}${ens.length?` (del ${ens[0].fecha} al ${ens[ens.length-1].fecha})`:""}.`);
+
+  // resumen por ejercicio
+  const porEj=new Map();
+  ens.forEach(en=>en.ejercicios.forEach(b=>{
+    const ss=b.series.filter(s=>s.hecha&&s.tipo!=="C"&&s.reps>0);
+    if(!ss.length) return;
+    let mejor=null;
+    ss.forEach(s=>{ const e=e1rm(s.peso||0,s.reps); if(!mejor||e>mejor.e||(!mejor.e&&s.reps>mejor.s.reps)) mejor={e,s}; });
+    if(!porEj.has(b.ejId)) porEj.set(b.ejId,[]);
+    porEj.get(b.ejId).push({fecha:en.fecha, mejor, series:ss.length});
+  }));
+  if(porEj.size){
+    L.push(`\n## Resumen por ejercicio (mejor serie de cada sesión; 1RM estimada entre paréntesis)`);
+    [...porEj.entries()].sort((a,b)=>b[1].length-a[1].length).forEach(([id,ses])=>{
+      const e=ej(id), f=x=>`${fmtKg(x.mejor.s.peso||0)}×${x.mejor.s.reps}${x.mejor.e?` (${fmtKg(Math.round(x.mejor.e*10)/10)})`:""}`;
+      const pri=ses[0], ult=ses[ses.length-1];
+      const top=ses.reduce((a,x)=>x.mejor.e>a.mejor.e?x:a,ses[0]);
+      L.push(`- ${e.nombre} [${MUSCULOS[e.m]||e.m}; ${REG_NOM[regDe(e)]}]: ${ses.length} sesiones. Primera ${pri.fecha}: ${f(pri)}. Última ${ult.fecha}: ${f(ult)}. Mejor ${top.fecha}: ${f(top)}.`);
+    });
+  }
+
+  // series semanales por músculo (últimas 6 semanas)
+  const semanas={};
+  ens.forEach(en=>en.ejercicios.forEach(b=>{
+    const n=b.series.filter(s=>s.hecha&&s.tipo!=="C").length; if(!n) return;
+    const e=ej(b.ejId), max=Math.max(...Object.values(e.act)), sem=lunesDe(en.fecha);
+    semanas[sem]=semanas[sem]||{};
+    Object.entries(e.act).forEach(([m,w])=>semanas[sem][m]=(semanas[sem][m]||0)+n*(w/max));
+  }));
+  const ultSem=Object.keys(semanas).sort().slice(-6);
+  if(ultSem.length){
+    L.push(`\n## Series efectivas por músculo y semana (semana que empieza el lunes indicado; sin calentamientos)`);
+    ultSem.forEach(s=>{
+      const fila=Object.entries(semanas[s]).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`${MUSCULOS[m]||m} ${Math.round(v*10)/10}`).join(", ");
+      L.push(`- ${s}: ${fila}`);
+    });
+  }
+
+  // planes y rutinas
+  if(ESTADO.planes.length){
+    L.push(`\n## Planes y rutinas guardados`);
+    ESTADO.planes.forEach(pl=>{
+      L.push(`- ${pl.nombre}: `+(pl.rutinas||[]).map(r=>`${r.nombre} (${(r.ejercicios||[]).map(x=>ej(x.ejId).nombre).join(", ")})`).join("; "));
+    });
+  }
+
+  // historial completo
+  if(ens.length){
+    L.push(`\n## Historial completo de sesiones`);
+    L.push(`Formato: peso×reps; "@" = esfuerzo que marcó (6 fácil, 7.5 bien, 9 dura, 10 al límite). Tipos de serie distintos de la normal se indican entre corchetes.`);
+    ens.forEach(en=>{
+      const dur=en.fin&&en.inicio?` · ${Math.round((en.fin-en.inicio)/60000)} min`:"";
+      const r=en.readiness?` · llegó con sueño ${en.readiness.sueno}/5, cuerpo ${en.readiness.dolor}/5 (1 adolorido, 5 fresco), energía ${en.readiness.energia}/5`:"";
+      L.push(`\n### ${en.fecha} · ${etiquetaEntreno(en)}${dur}${r}`);
+      if(en.notas) L.push(`Notas: ${en.notas}`);
+      en.ejercicios.forEach(b=>{
+        const ss=b.series.filter(s=>s.hecha); if(!ss.length) return;
+        const e=ej(b.ejId);
+        L.push(`- ${e.nombre}${b.ss?` (superserie ${b.ss})`:""}: `+ss.map(s=>
+          `${TIPO_NOM[s.tipo]?`[${TIPO_NOM[s.tipo]}] `:""}${fmtKg(s.peso||0)}×${s.reps}${s.rpe?` @${s.rpe}`:""}`).join(", "));
+        if(b.notas) L.push(`  Nota: ${b.notas}`);
+      });
+    });
+  }
+  return L.join("\n");
+}
+
+/* ---- ajustes: clave ---- */
+async function pintarAjustesCoach(){
+  const k=await kvGet("coach-clave");
+  $("aj-coach-clave").value="";
+  $("aj-coach-estado").textContent = k ? `Clave guardada (termina en …${k.slice(-4)}).` : "Sin clave: el coach está desactivado.";
+}
+async function guardarClaveCoach(){
+  const k=$("aj-coach-clave").value.trim();
+  if(!k) return toast("Pega la clave primero");
+  if(!k.startsWith("sk-ant-")) return toast("Esa no parece una clave de Anthropic (empieza por sk-ant-)");
+  await kvSet("coach-clave",k);
+  toast("Clave guardada"); pintarAjustesCoach();
+}
+async function borrarClaveCoach(){
+  if(!confirm("¿Quitar la clave del coach de este teléfono?")) return;
+  await dbDel("kv","coach-clave"); toast("Clave quitada"); pintarAjustesCoach();
+}
+function irAjustesCoach(){
+  irVista("ajustes",document.querySelector('nav.tabs button[data-vista="ajustes"]'));
+  setTimeout(()=>$("aj-coach-card").scrollIntoView({behavior:"smooth",block:"start"}),50);
+}
+
+/* ---- chat ---- */
+async function abrirCoach(){
+  const k=await kvGet("coach-clave");
+  $("coach-sin-clave").style.display=k?"none":"block";
+  $("coach-chat").style.display=k?"block":"none";
+  if(!k) return;
+  if(!coachConv) coachConv=await kvGet("coach-conv");
+  if(!coachConv) coachConv=nuevaConvCoach();
+  pintarCoach();
+  window.scrollTo(0,document.body.scrollHeight);
+}
+function nuevaConvCoach(){ return {creado:hoyISO(), nEntrenos:ESTADO.entrenos.length, datos:resumenParaCoach(), mensajes:[]}; }
+async function nuevaConversacionCoach(){
+  if(coachEnCurso) return;
+  if(coachConv&&coachConv.mensajes.length&&!confirm("¿Empezar una conversación nueva? La actual se borra.")) return;
+  coachConv=nuevaConvCoach(); await kvSet("coach-conv",coachConv); pintarCoach();
+}
+const textoDe = content => typeof content==="string" ? content : content.filter(b=>b.type==="text").map(b=>b.text).join("");
+function pintarCoach(){
+  const c=coachConv;
+  const nuevos=ESTADO.entrenos.length-c.nEntrenos;
+  $("coach-info").textContent=`Conoce ${c.nEntrenos} entrenamiento${c.nEntrenos===1?"":"s"} · datos del ${c.creado}`+
+    (nuevos>0?` · hay ${nuevos} nuevo${nuevos===1?"":"s"}: empieza una conversación nueva para que los vea`:"");
+  const SUG=["¿Cómo voy en general desde que empecé?","¿Está bien distribuido mi volumen por músculo?","¿En qué ejercicio he mejorado más y en cuál estoy estancado?","¿Qué debería ajustar en mi próximo entrenamiento?"];
+  $("coach-mensajes").innerHTML = c.mensajes.length
+    ? c.mensajes.map(m=>m.role==="user"?`<div class="msj yo">${escHTML(textoDe(m.content))}</div>`:`<div class="msj coach">${mdCoach(textoDe(m.content))}</div>`).join("")
+    : `<p class="peq muted" style="margin:.2rem 0 .5rem">Prueba con:</p><div class="coach-sugerencias">${SUG.map(s=>`<button onclick="preguntarCoach(this.textContent)">${escHTML(s)}</button>`).join("")}</div>`;
+}
+function preguntarCoach(t){ $("coach-texto").value=t; enviarCoach(); }
+function ajustarAltoCoach(){ const t=$("coach-texto"); t.style.height="auto"; t.style.height=Math.min(160,t.scrollHeight)+"px"; }
+
+/* Tras un cambio de modelo a mitad de respuesta (fallback), los bloques internos
+   anteriores al último bloque "fallback" no se reenvían; el texto sí. */
+function contenidoParaHistorial(content){
+  let corte=-1; content.forEach((b,i)=>{ if(b.type==="fallback") corte=i; });
+  if(corte<0) return content;
+  const INTERNOS=new Set(["thinking","redacted_thinking","tool_use"]);
+  return content.filter((b,i)=>i>corte || !INTERNOS.has(b.type));
+}
+async function cargarSDKCoach(){
+  if(!coachSDK) coachSDK=(await import(COACH_SDK_URL)).default;
+  return coachSDK;
+}
+function mensajeErrorCoach(err,A){
+  if(A && err instanceof A.AuthenticationError) return "La clave no es válida o fue revocada. Revísala en Ajustes → Coach.";
+  if(A && err instanceof A.PermissionDeniedError) return "Tu clave no tiene permiso para usar este modelo. Revisa tu cuenta en console.anthropic.com.";
+  if(A && err instanceof A.RateLimitError) return "Demasiadas peticiones o límite de gasto alcanzado. Espera un momento o revisa tu saldo en console.anthropic.com.";
+  if(A && err instanceof A.BadRequestError) return "La petición fue rechazada: "+((err.error&&err.error.error&&err.error.error.message)||err.message);
+  if(A && err instanceof A.APIConnectionError) return "Sin conexión con Anthropic. El coach necesita internet.";
+  if(A && err instanceof A.APIError) return "Anthropic devolvió un error ("+(err.status||"?")+"). Prueba de nuevo en un momento.";
+  if(!A) return "No se pudo cargar el coach. Comprueba tu conexión a internet.";
+  return "Error inesperado: "+(err&&err.message||err);
+}
+async function enviarCoach(){
+  if(coachEnCurso) return;
+  const texto=$("coach-texto").value.trim(); if(!texto) return;
+  const clave=await kvGet("coach-clave"); if(!clave) return abrirCoach();
+  coachEnCurso=true; $("coach-enviar").disabled=true;
+  if(!coachConv.mensajes.length) $("coach-mensajes").innerHTML="";
+  const cont=$("coach-mensajes");
+  cont.insertAdjacentHTML("beforeend",`<div class="msj yo">${escHTML(texto)}</div><div class="msj coach pensando">Pensando…</div>`);
+  const burbuja=cont.lastElementChild;
+  $("coach-texto").value=""; ajustarAltoCoach();
+  window.scrollTo(0,document.body.scrollHeight);
+  const mensajes=[...coachConv.mensajes,{role:"user",content:texto}];
+  let A=null;
+  try{
+    A=await cargarSDKCoach();
+    const cliente=new A({apiKey:clave, dangerouslyAllowBrowser:true});
+    const stream=cliente.beta.messages.stream({
+      model:COACH_MODELO,
+      max_tokens:64000,
+      thinking:{type:"adaptive"},
+      output_config:{effort:"medium"},
+      betas:["server-side-fallback-2026-07-01"],
+      fallbacks:"default",
+      cache_control:{type:"ephemeral"},
+      system:[{type:"text",text:COACH_INSTRUCCIONES},{type:"text",text:coachConv.datos}],
+      messages:mensajes
+    });
+    let acumulado="";
+    stream.on("text",d=>{
+      acumulado+=d;
+      burbuja.classList.remove("pensando"); burbuja.innerHTML=mdCoach(acumulado);
+    });
+    const final=await stream.finalMessage();
+    if(final.stop_reason==="refusal"){
+      burbuja.className="msj error"; burbuja.textContent="El coach no pudo responder a esa pregunta. Prueba a formularla de otra manera.";
+      $("coach-texto").value=texto; return;
+    }
+    let respuesta=textoDe(final.content);
+    if(final.stop_reason==="max_tokens") respuesta+="\n\n(La respuesta se cortó por larga.)";
+    burbuja.classList.remove("pensando"); burbuja.innerHTML=mdCoach(respuesta);
+    coachConv.mensajes=[...mensajes,{role:"assistant",content:contenidoParaHistorial(final.content)}];
+    await kvSet("coach-conv",coachConv);
+  }catch(err){
+    console.error(err);
+    burbuja.className="msj error"; burbuja.textContent=mensajeErrorCoach(err,A);
+    $("coach-texto").value=texto; ajustarAltoCoach();
+  }finally{
+    coachEnCurso=false; $("coach-enviar").disabled=false;
+  }
+}
+
 (async function init(){
   $("fecha-hoy").textContent=new Date().toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
   medirCabecera();

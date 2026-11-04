@@ -23,7 +23,16 @@ A diferencia de la app de nutrición, aquí hay 5 archivos en vez de 1: el servi
 
 ⚠️ **Misma advertencia que la app de nutrición:** los datos viven en IndexedDB de Safari. Borrar historial de navegación, eliminar el icono o cambiar la URL de despliegue destruye los datos locales. **Exporta el JSON de respaldo con frecuencia** (Ajustes → Copia de seguridad completa).
 
-## Nuevo en la 3.2
+## Nuevo en la 3.3
+
+- **Coach con IA (pestaña Coach):** un chat con Claude (modelo `claude-opus-5-5`) que recibe un resumen de todo tu historial (sesiones, series, readiness, notas, rutinas, progreso por ejercicio y series semanales por músculo) y responde preguntas como "¿cómo voy en press de banca?" o "¿está bien mi distribución?".
+  - **Activarlo:** crea una clave en console.anthropic.com → API Keys y pégala en Ajustes → Coach. La clave se guarda solo en el teléfono (no va en la copia de seguridad ni en GitHub).
+  - **Coste:** se paga por uso en tu cuenta de Anthropic; unos pocos centavos de dólar por pregunta.
+  - **Datos:** al empezar una conversación el coach recibe tus datos de ese momento. Si entrenas después, pulsa "Nueva conversación" para que vea lo nuevo.
+  - **Privacidad:** es la única función que envía datos fuera del teléfono (a Anthropic), y solo cuando le preguntas algo.
+  - Necesita internet; el resto de la app sigue funcionando sin conexión.
+
+## Nuevo en la 3.2 (publicada junto con la 3.3)
 
 - **Barra de descanso:** ya no tapa "Añadir ejercicio" ni "Terminar entrenamiento"; la página deja hueco al final mientras está visible.
 - **Ejercicio nuevo:** curl martillo en polea (cuerda).
