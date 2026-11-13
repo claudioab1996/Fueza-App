@@ -172,7 +172,16 @@ nav.tabs svg{width:24px;height:24px}
 :root.oscuro .bloque-ej{border:1px solid var(--line)}
 .bloque-ej.ss-a{box-shadow:inset 4px 0 0 var(--accent),var(--sombra)}
 .bloque-ej header{padding:.8rem .8rem .5rem;display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem}
-.ej-cab{display:flex;align-items:center;gap:.7rem;text-align:left;min-width:0}
+.ej-cab{display:flex;align-items:center;gap:.7rem;text-align:left;min-width:0;flex:1}
+.agarre{flex:none;align-self:center;width:30px;min-height:46px;margin-left:-.35rem;display:flex;align-items:center;justify-content:center;
+  color:var(--faint);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#bloques-ejercicios.reordenando{-webkit-user-select:none;user-select:none}
+#bloques-ejercicios.reordenando .bloque-ej>*:not(header){display:none}
+#bloques-ejercicios.reordenando .bloque-ej{margin-bottom:.45rem;transition:transform .16s}
+#bloques-ejercicios.reordenando .bloque-ej header{padding-bottom:.8rem}
+#bloques-ejercicios.reordenando .ej-acc{visibility:hidden}
+#bloques-ejercicios.reordenando .bloque-ej.arrastrado{transition:none;position:relative;z-index:5;box-shadow:0 14px 34px rgba(0,0,0,.32)}
+#bloques-ejercicios.reordenando .arrastrado .agarre{color:var(--accent);cursor:grabbing}
 .ej-cab .nom{display:block;font-weight:600;font-size:1.02rem;line-height:1.2}
 .ej-cab .sub{display:block;font-size:.8rem;color:var(--muted);margin-top:2px}
 .ej-acc{display:flex;flex:none}
@@ -562,7 +571,7 @@ nav.tabs svg{width:24px;height:24px}
       <button class="btn" style="margin-bottom:.5rem" onclick="exportarCSV()">Exportar historial a hoja de cálculo (CSV)</button>
       <button class="btn peligro" onclick="borrarTodo()">Borrar todos los datos</button>
     </div>
-    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.3 · sin cuentas; tus datos solo salen del teléfono si usas el coach</p>
+    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.4 · sin cuentas; tus datos solo salen del teléfono si usas el coach</p>
   </section>
 </main>
 
@@ -1165,6 +1174,7 @@ let db;
 ===================================================== */
 const PREFS_DEF = { barra:20, discos:[25,20,15,10,5,2.5,1.25], descanso:90, redondeo:2.5, formula:"epley", tema:"auto", esfuerzo:true, repsTope:12, descGrande:true };
 const IC = {
+  grip:`<svg class="ic" viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>`,
   x:`<svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
   edit:`<svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>`,
   link:`<svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>`,
@@ -1656,6 +1666,7 @@ function pintarBloques(){
       <button class="btn mini" onclick="aplicarSugerencia(${bi})">Usar</button></div>` : "";
     div.innerHTML = `
       <header>
+        ${ESTADO.activo.ejercicios.length>1?`<button class="agarre" aria-label="Arrastra para cambiar el orden" oncontextmenu="return false" onpointerdown="iniciarArrastre(event,${bi})">${IC.grip}</button>`:""}
         <button class="ej-cab" onclick="abrirEjDetalle('${e.id}')">${pictoHTML(e)}
           <span><span class="nom">${e.nombre}</span><span class="sub">${MUSCULOS[e.m]||""}${b.ss?` · <b style="color:var(--accent)">Superserie ${b.ss}</b>`:""}</span></span></button>
         <div class="ej-acc">
@@ -1677,6 +1688,83 @@ function pintarBloques(){
     cont.appendChild(div);
   });
   activarSwipes(); pintarProgresoActivo();
+}
+/* ---- reordenar ejercicios arrastrando el agarre ----
+   Al empezar, la lista se pliega a solo las cabeceras para que quepa en pantalla.
+   Durante el arrastre no se mueve nada en el DOM (solo transform), así el toque no se corta. */
+let arrastre=null;
+function iniciarArrastre(ev,bi){
+  if(arrastre || !ESTADO.activo || ESTADO.activo.ejercicios.length<2) return;
+  if(ev.button) return;
+  ev.preventDefault();
+  const cont=$("bloques-ejercicios"), bloques=[...cont.children], el=bloques[bi];
+  const antes=el.getBoundingClientRect().top;
+  cont.classList.add("reordenando"); el.classList.add("arrastrado");
+  // tras plegar, recolocar la lista para que el bloque siga justo bajo el dedo:
+  // primero con scroll; si la página ya no da para más, con un hueco encima de la lista
+  cont.style.paddingBottom=window.innerHeight+"px";
+  window.scrollBy({top:el.getBoundingClientRect().top-antes,behavior:"instant"});
+  const resto=antes-el.getBoundingClientRect().top;
+  if(resto>0.5) cont.style.paddingTop=resto+"px";
+  const rects=bloques.map(b=>{ const r=b.getBoundingClientRect(); return {top:r.top+window.scrollY, alto:r.height}; });
+  const hueco=rects[1].top-(rects[0].top+rects[0].alto);
+  arrastre={bi,el,bloques,rects,paso:rects[bi].alto+hueco,y0:ev.clientY+window.scrollY,y:ev.clientY,destino:bi,raf:0};
+  if(navigator.vibrate) navigator.vibrate(15);
+  window.addEventListener("pointermove",moverArrastre,{passive:false});
+  window.addEventListener("pointerup",soltarArrastre);
+  window.addEventListener("pointercancel",cancelarArrastre);
+  const ciclo=()=>{
+    if(!arrastre) return;
+    const margen=110, y=arrastre.y, alto=window.innerHeight;
+    if(y<margen) window.scrollBy({top:-Math.ceil((margen-y)/8),behavior:"instant"});
+    else if(y>alto-margen-60) window.scrollBy({top:Math.ceil((y-(alto-margen-60))/8),behavior:"instant"});
+    aplicarArrastre();
+    arrastre.raf=requestAnimationFrame(ciclo);
+  };
+  ciclo();
+}
+function aplicarArrastre(){
+  const a=arrastre, yo=a.rects[a.bi], ult=a.rects[a.rects.length-1];
+  let dy=a.y+window.scrollY-a.y0;
+  dy=Math.max(a.rects[0].top-yo.top-20, Math.min(ult.top+ult.alto-yo.top-yo.alto+20, dy));
+  a.el.style.transform=`translateY(${dy}px) scale(1.02)`;
+  const centro=yo.top+yo.alto/2+dy;
+  let destino=a.bi;
+  a.bloques.forEach((b,i)=>{
+    if(i===a.bi) return;
+    const medio=a.rects[i].top+a.rects[i].alto/2; let d=0;
+    if(i<a.bi && centro<medio){ d=a.paso; destino=Math.min(destino,i); }
+    if(i>a.bi && centro>medio){ d=-a.paso; destino=Math.max(destino,i); }
+    b.style.transform=d?`translateY(${d}px)`:"";
+  });
+  a.destino=destino;
+}
+function moverArrastre(ev){ if(!arrastre) return; ev.preventDefault(); arrastre.y=ev.clientY; aplicarArrastre(); }
+function soltarArrastre(){ terminarArrastre(true); }
+function cancelarArrastre(){ terminarArrastre(false); }
+async function terminarArrastre(aplicar){
+  const a=arrastre; if(!a) return;
+  arrastre=null; cancelAnimationFrame(a.raf);
+  window.removeEventListener("pointermove",moverArrastre);
+  window.removeEventListener("pointerup",soltarArrastre);
+  window.removeEventListener("pointercancel",cancelarArrastre);
+  const cont=$("bloques-ejercicios");
+  cont.classList.remove("reordenando"); cont.style.paddingTop=cont.style.paddingBottom="";
+  let fin=a.bi;
+  if(aplicar && a.destino!==a.bi){
+    fin=a.destino;
+    const ejs=ESTADO.activo.ejercicios, orden=ejs.map((_,i)=>i);
+    ejs.splice(fin,0,ejs.splice(a.bi,1)[0]);
+    orden.splice(fin,0,orden.splice(a.bi,1)[0]);
+    if(ultimaHecha) ultimaHecha.bi=orden.indexOf(ultimaHecha.bi);   // la serie recién hecha sigue siendo la misma
+    await guardarActivo();
+  }
+  pintarBloques(); pintarEsfuerzo();
+  const el=$("bloques-ejercicios").children[fin];
+  if(el){
+    const cab=document.querySelector("header.app");
+    window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-(cab?cab.offsetHeight:0)-70,behavior:"instant"});
+  }
 }
 function filaSerie(bi,si,s,sig){
   return `<div class="serie-wrap" data-bi="${bi}" data-si="${si}">

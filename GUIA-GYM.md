@@ -23,6 +23,10 @@ A diferencia de la app de nutrición, aquí hay 5 archivos en vez de 1: el servi
 
 ⚠️ **Misma advertencia que la app de nutrición:** los datos viven en IndexedDB de Safari. Borrar historial de navegación, eliminar el icono o cambiar la URL de despliegue destruye los datos locales. **Exporta el JSON de respaldo con frecuencia** (Ajustes → Copia de seguridad completa).
 
+## Nuevo en la 3.4
+
+- **Reordenar ejercicios durante la sesión:** cada ejercicio tiene un agarre (≡) a la izquierda del nombre. Mantenlo pulsado y arrastra: la lista se pliega a solo los nombres para que quepa en pantalla, y al soltar el ejercicio queda en su nuevo lugar con sus series intactas. Aparece cuando hay 2 o más ejercicios.
+
 ## Nuevo en la 3.3
 
 - **Coach con IA (pestaña Coach):** un chat con Claude (modelo `claude-opus-5-5`) que recibe un resumen de todo tu historial (sesiones, series, readiness, notas, rutinas, progreso por ejercicio y series semanales por músculo) y responde preguntas como "¿cómo voy en press de banca?" o "¿está bien mi distribución?".
