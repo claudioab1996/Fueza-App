@@ -23,6 +23,11 @@ A diferencia de la app de nutrición, aquí hay 5 archivos en vez de 1: el servi
 
 ⚠️ **Misma advertencia que la app de nutrición:** los datos viven en IndexedDB de Safari. Borrar historial de navegación, eliminar el icono o cambiar la URL de despliegue destruye los datos locales. **Exporta el JSON de respaldo con frecuencia** (Ajustes → Copia de seguridad completa).
 
+## Nuevo en la 3.5
+
+- **Horario de la sesión editable:** al terminar un entrenamiento se muestran la hora de inicio y de fin, y puedes cambiarlas. Si la sesión llevaba abierta más de 3 horas (te olvidaste de terminarla), el fin se propone solo con la hora de tu última serie + 5 min.
+- **Corregir sesiones ya guardadas:** abre un entrenamiento del historial o del calendario → "Editar horario".
+
 ## Nuevo en la 3.4
 
 - **Reordenar ejercicios durante la sesión:** cada ejercicio tiene un agarre (≡) a la izquierda del nombre. Mantenlo pulsado y arrastra: la lista se pliega a solo los nombres para que quepa en pantalla, y al soltar el ejercicio queda en su nuevo lugar con sus series intactas. Aparece cuando hay 2 o más ejercicios.

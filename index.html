@@ -296,6 +296,10 @@ nav.tabs svg{width:24px;height:24px}
 .campo label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.35rem}
 .campo .ayuda{font-size:.76rem;color:var(--muted);margin-top:.3rem}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.horario{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.9rem}
+.horario .campo{margin-bottom:0}
+.horario input{width:100%;min-width:0;font-size:.95rem}
+.horario-linea{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin:-.4rem 0 .9rem}
 .nota{font-size:.84rem;background:var(--accent-soft);color:var(--text);border-radius:12px;padding:.6rem .75rem;margin-bottom:.8rem}
 .nota b{color:var(--accent)}
 
@@ -571,7 +575,7 @@ nav.tabs svg{width:24px;height:24px}
       <button class="btn" style="margin-bottom:.5rem" onclick="exportarCSV()">Exportar historial a hoja de cálculo (CSV)</button>
       <button class="btn peligro" onclick="borrarTodo()">Borrar todos los datos</button>
     </div>
-    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.4 · sin cuentas; tus datos solo salen del teléfono si usas el coach</p>
+    <p class="peq muted" style="text-align:center;margin-top:.5rem">Fuerza 3.5 · sin cuentas; tus datos solo salen del teléfono si usas el coach</p>
   </section>
 </main>
 
@@ -1899,24 +1903,67 @@ function metricasEntreno(en){
   }));
   return {tonelaje,series,ejercicios};
 }
+/* ---- horario de la sesión (inicio / fin editables) ---- */
+const aInputFecha = ms=>{ const d=new Date(ms), p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+const deInputFecha = v=>{ const t=new Date(v).getTime(); return isNaN(t)?null:t; };
+const fechaDe = ms=>aInputFecha(ms).slice(0,10);
+const fmtHora = ms=>new Date(ms).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"});
+const fmtMin = ms=>{ const m=Math.round(ms/60000); return m<60?`${m} min`:`${Math.floor(m/60)} h ${String(m%60).padStart(2,"0")} min`; };
+const SESION_LARGA = 3*3600000;
+function ultimaSerieTs(en){
+  let t=0; en.ejercicios.forEach(b=>b.series.forEach(s=>{ if(s.hecha&&s.ts>t) t=s.ts; })); return t;
+}
+/* si la sesión lleva abierta más de 3 h, lo normal es que se olvidó terminarla:
+   se propone como fin la hora de la última serie + 5 min */
+function finSugerido(en){
+  const ahora=Date.now(), ult=ultimaSerieTs(en);
+  if(ahora-en.inicio>SESION_LARGA && ult>en.inicio) return {fin:Math.min(ahora,ult+5*60000), corregido:true};
+  return {fin:ahora, corregido:false};
+}
+function htmlHorario(pref,inicio,fin){
+  return `<div class="horario">
+    <div class="campo"><label>Empezó</label><input type="datetime-local" id="${pref}-inicio" value="${aInputFecha(inicio)}" oninput="actualizarDurHorario('${pref}')"></div>
+    <div class="campo"><label>Terminó</label><input type="datetime-local" id="${pref}-fin" value="${aInputFecha(fin)}" oninput="actualizarDurHorario('${pref}')"></div>
+  </div>`;
+}
+function leerHorario(pref){
+  const ini=deInputFecha($(pref+"-inicio").value), fin=deInputFecha($(pref+"-fin").value);
+  if(ini==null||fin==null) return {error:"Completa la hora de inicio y de fin"};
+  if(fin<=ini) return {error:"La hora de fin tiene que ser posterior a la de inicio"};
+  if(fin>Date.now()+60000) return {error:"La hora de fin no puede estar en el futuro"};
+  return {ini,fin};
+}
+function actualizarDurHorario(pref){
+  const h=leerHorario(pref), el=$(pref+"-dur"); if(!el) return;
+  el.textContent = h.error ? "—" : fmtMin(h.fin-h.ini);
+}
+async function confirmarHorarioLargo(ini,fin){
+  return fin-ini<=SESION_LARGA || confirm(`La sesión quedaría en ${fmtMin(fin-ini)}. ¿Es correcto?`);
+}
+
 function terminarEntreno(){
   const hechas=ESTADO.activo.ejercicios.some(b=>b.series.some(s=>s.hecha));
   if(!hechas) return toast("Marca al menos una serie como hecha");
   const hechasSolo={...ESTADO.activo, ejercicios:ESTADO.activo.ejercicios.map(b=>({...b,series:b.series.filter(s=>s.hecha)})).filter(b=>b.series.length)};
-  const m=metricasEntreno(hechasSolo), p=progresoActivo();
+  const m=metricasEntreno(hechasSolo), p=progresoActivo(), sf=finSugerido(ESTADO.activo);
   $("resumen-contenido").innerHTML = `
     <div class="stats">
-      <div class="stat"><b>${fmtDur(Date.now()-ESTADO.activo.inicio)}</b><span>Duración</span></div>
+      <div class="stat"><b id="res-dur">${fmtMin(sf.fin-ESTADO.activo.inicio)}</b><span>Duración</span></div>
       <div class="stat"><b>${fmtKg(m.tonelaje)}</b><span>Kilos movidos</span></div>
       <div class="stat"><b>${m.series}</b><span>Series hechas</span></div>
       <div class="stat"><b>${m.ejercicios}</b><span>Ejercicios</span></div>
     </div>
+    ${htmlHorario("res",ESTADO.activo.inicio,sf.fin)}
+    ${sf.corregido?`<p class="nota" style="margin-top:.7rem">La sesión llevaba abierta ${fmtMin(Date.now()-ESTADO.activo.inicio)}. Pusimos como fin la hora de tu última serie; cámbiala si no es correcta.</p>`:""}
     ${p.h<p.t?`<p class="peq muted" style="margin-top:.7rem">Quedan ${p.t-p.h} series sin marcar; no se guardarán.</p>`:""}`;
   abrirModal("m-resumen");
 }
 async function confirmarGuardarEntreno(){
   const a=ESTADO.activo;
-  a.fin=Date.now();
+  const h=leerHorario("res"); if(h.error) return toast(h.error);
+  if(!await confirmarHorarioLargo(h.ini,h.fin)) return;
+  a.inicio=h.ini; a.fin=h.fin; a.fecha=fechaDe(h.ini);
   a.notas=$("resumen-notas").value.trim();
   a.ejercicios=a.ejercicios.filter(b=>b.series.some(s=>s.hecha)); // limpia bloques vacíos
   a.ejercicios.forEach(b=>{ b.series=b.series.filter(s=>s.hecha); delete b.sugOk; });
@@ -2124,7 +2171,7 @@ function pintarHistorial(){
     return `<div class="item-lista c-${catEntreno(en)}" onclick="abrirDetalle(${en.id})">
       <div class="fila" style="min-width:0;align-self:stretch"><span class="hist-marca"></span>
         <div style="min-width:0"><div class="tit">${etiquetaEntreno(en)}</div>
-        <div class="det cap">${fmtFecha(en.fecha)}${en.fin?` · ${Math.round((en.fin-en.inicio)/60000)} min`:""}</div></div></div>
+        <div class="det cap">${fmtFecha(en.fecha)}${en.fin&&en.inicio?` · ${fmtMin(en.fin-en.inicio)}`:""}</div></div></div>
       <div class="hist-n">${m.series} series<small>${fmtKg(Math.round(m.tonelaje))} kg movidos</small></div></div>`;
   }).join("") : `<div class="vacio">Todavía no hay entrenamientos.<br>Empieza el primero con el botón de arriba.</div>`;
 }
@@ -2135,6 +2182,11 @@ function abrirDetalle(id){
   $("detalle-titulo").textContent=etiquetaEntreno(en);
   $("detalle-contenido").innerHTML =
     `<p class="peq muted cap" style="margin:-.5rem 0 .8rem">${fmtFecha(en.fecha)}</p>
+     <div class="horario-linea" id="det-horario-linea">
+       <span class="peq">${en.inicio&&en.fin?`${fmtHora(en.inicio)} – ${fmtHora(en.fin)} · <b>${fmtMin(en.fin-en.inicio)}</b>`:`<span class="muted">Sin horario guardado</span>`}</span>
+       <button class="btn mini" onclick="editarHorarioDetalle()">Editar horario</button>
+     </div>
+     <div id="det-horario-form" style="display:none;margin:-.4rem 0 .9rem"></div>
      <div class="stats" style="margin-bottom:.9rem">
       <div class="stat"><b>${m.series}</b><span>Series</span></div>
       <div class="stat"><b>${fmtKg(Math.round(m.tonelaje))}</b><span>Kilos movidos</span></div>
@@ -2145,6 +2197,24 @@ function abrirDetalle(id){
         b.series.map(s=>`${s.tipo!=="N"?s.tipo+" ":""}${s.peso?fmtKg(s.peso)+"×":""}${s.reps||0}`).join("  ")}</div></div></div></div>`; }).join("")+
     (en.notas?`<p class="nota" style="margin-top:.8rem"><b>Nota:</b> ${en.notas}</p>`:"");
   abrirModal("m-detalle");
+}
+function editarHorarioDetalle(){
+  const en=ESTADO.entrenos.find(x=>x.id===detalleId); if(!en) return;
+  const ini=en.inicio||en.id, fin=en.fin||ultimaSerieTs(en)||ini+3600000;
+  const f=$("det-horario-form");
+  f.innerHTML = htmlHorario("det",ini,fin)+
+    `<p class="peq muted" style="margin:.5rem 0 .6rem">Duración: <b id="det-dur">${fmtMin(fin-ini)}</b></p>
+     <div class="grid2"><button class="btn" onclick="abrirDetalle(detalleId)">Cancelar</button>
+     <button class="btn primario" onclick="guardarHorarioDetalle()">Guardar horario</button></div>`;
+  f.style.display="block"; $("det-horario-linea").style.display="none";
+}
+async function guardarHorarioDetalle(){
+  const en=ESTADO.entrenos.find(x=>x.id===detalleId); if(!en) return;
+  const h=leerHorario("det"); if(h.error) return toast(h.error);
+  if(!await confirmarHorarioLargo(h.ini,h.fin)) return;
+  en.inicio=h.ini; en.fin=h.fin; en.fecha=fechaDe(h.ini);
+  await dbPut("entrenos",en);
+  abrirDetalle(en.id); pintarHoy(); toast("Horario actualizado");
 }
 async function borrarEntrenoDetalle(){
   if(!confirm("¿Borrar este entrenamiento definitivamente?")) return;
